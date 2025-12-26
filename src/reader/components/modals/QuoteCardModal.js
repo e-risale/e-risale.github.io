@@ -235,6 +235,9 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
             style={{ overscrollBehavior: 'none' }} // Prevents browser pull-to-refresh/back navigation
         >
 
+            {/* SPACER FOR MOBILE TOP CLEARANCE */}
+            <div className="w-full min-h-[150px] shrink-0 md:hidden pointer-events-none"></div>
+
             {/* TOP HEADER (Mobile Close Button) */}
             <div className="absolute top-4 right-4 z-[130] md:hidden">
                 <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-xl text-white">✕</button>
