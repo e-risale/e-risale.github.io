@@ -229,7 +229,7 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-start md:justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200 overflow-y-auto" onClick={onClose}>
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-start md:justify-center bg-black/95 backdrop-blur-md px-4 pt-24 pb-8 md:p-4 animate-in fade-in duration-200 overflow-y-auto" onClick={onClose}>
 
             {/* TOP HEADER (Mobile Close Button) */}
             <div className="absolute top-4 right-4 z-[130] md:hidden">

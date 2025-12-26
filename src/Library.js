@@ -15,7 +15,7 @@ export default function Library({ onBookSelect, onBack, onOpenBookmarks, onOpenS
     }, []);
 
     return (
-        <div className={`min-h-screen ${darkMode ? 'bg-[#111214] text-gray-200' : 'bg-[#fdfbf7]'}`}>
+        <div className={`h-[100dvh] overflow-y-auto custom-scrollbar pb-24 md:pb-0 ${darkMode ? 'bg-[#111214] text-gray-200' : 'bg-[#fdfbf7]'}`}>
             {/* STANDARDIZED HEADER (Matches ReaderHeader.js) */}
             <div className="sticky top-0 z-30 w-full transition-all duration-300">
                 <div className={`shadow-sm backdrop-blur-md border-b transition-colors ${darkMode ? 'bg-[#1a1b1e]/95 border-gray-700' : 'bg-[#fdfbf7]/95 border-[#edeae6]'}`}>
