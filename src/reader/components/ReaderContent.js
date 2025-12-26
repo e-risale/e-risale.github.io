@@ -902,7 +902,7 @@ const ReaderContent = forwardRef(({
             {bookData.length > 0 ? (
                 <Virtuoso
                     ref={virtuosoRef}
-                    style={{ height: '100%', width: '100%' }}
+                    style={{ height: '100%', width: '100%', overscrollBehavior: 'none' }}
                     data={bookData}
                     onScroll={(e) => {
                         handleScroll();
