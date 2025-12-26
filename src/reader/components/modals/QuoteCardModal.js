@@ -14,81 +14,114 @@ const THEMES = [
 const QuoteCardTemplate = ({ text, source, author, theme, isExport = false }) => {
     return (
         <div
-            className="w-full h-full relative flex flex-col justify-between p-[80px]"
+            className="w-full h-full relative flex flex-col justify-between p-[80px] overflow-hidden"
             style={{
-                background: `linear-gradient(135deg, ${theme.from} 0%, ${theme.via} 60%, ${theme.to} 100%)`
+                background: `linear-gradient(180deg, ${theme.from} 0%, ${theme.via} 50%, ${theme.to} 100%)`
             }}
         >
-            {/* CSS Pattern Texture */}
-            <div className="absolute inset-0 opacity-[0.3] pointer-events-none mix-blend-overlay"
+            {/* 1. SOPHISTICATED BACKGROUND PATTERN (CSS Only - Islamic Geometric Style) */}
+            <div className="absolute inset-0 opacity-[0.07] pointer-events-none mix-blend-screen"
                 style={{
-                    backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 0% 0%, rgba(255,255,255,0.05) 1px, transparent 1px)`,
-                    backgroundSize: '40px 40px, 24px 24px'
+                    backgroundImage: `
+                        radial-gradient(circle at 100% 50%, transparent 20%, #ffffff 21%, #ffffff 34%, transparent 35%, transparent),
+                        radial-gradient(circle at 0% 50%, transparent 20%, #ffffff 21%, #ffffff 34%, transparent 35%, transparent)
+                    `,
+                    backgroundSize: '60px 120px',
+                    backgroundPosition: '0 0, 30px 60px'
                 }}>
             </div>
-            {/* Vignette Overlay */}
+
+            {/* Vignette Overlay for Depth */}
             <div className="absolute inset-0 pointer-events-none"
-                style={{ background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)' }}>
+                style={{ background: 'radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }}>
             </div>
 
+            {/* 2. BOTTOM SILHOUETTE (CSS Shapes) */}
+            <div className="absolute bottom-0 left-0 w-full h-[300px] pointer-events-none z-0 opacity-40">
+                {/* Rolling Hills / Domes Layer 1 */}
+                <div className="absolute bottom-[-50px] left-[-20%] w-[140%] h-[200px] rounded-[100%] bg-black/30 blur-xl"></div>
+                <div className="absolute bottom-[-20px] left-0 w-full h-[150px] bg-gradient-to-t from-black/60 to-transparent"></div>
+
+                {/* Decorative Vector-like Element at bottom right */}
+                <div className="absolute bottom-0 right-0 w-[400px] h-[300px] opacity-20"
+                    style={{
+                        background: 'radial-gradient(circle at 100% 100%, white 0%, transparent 60%)',
+                        clipPath: 'polygon(50% 100%, 100% 100%, 100% 50%, 80% 60%, 60% 80%)'
+                    }}>
+                </div>
+            </div>
+
+
             {/* TOP LEFT: Book & Chapter Info */}
-            <div className="absolute top-12 left-12 max-w-[600px] text-left z-20">
+            <div className="absolute top-12 left-12 max-w-[700px] text-left z-20">
                 {source && (
-                    <div className="flex flex-col gap-2">
-                        <div className="h-1 w-24 bg-amber-500/50 mb-2"></div>
-                        <span className="text-amber-100/90 text-[36px] font-bold font-serif leading-tight drop-shadow-lg">
+                    <div className="flex flex-col">
+                        {/* Removed the disconnected line */}
+                        <span className="text-amber-100/95 text-[40px] font-bold font-serif leading-tight drop-shadow-xl tracking-wide">
                             {source.split(' / ')[0]}
                         </span>
-                        <span className="text-amber-100/60 text-[28px] font-light font-serif italic">
-                            {source.split(' / ')[1] || ''}
-                        </span>
+                        <div className="flex items-center gap-3 mt-1">
+                            <div className="h-[1px] w-12 bg-amber-200/40"></div>
+                            <span className="text-amber-100/70 text-[26px] font-light font-serif italic">
+                                {source.split(' / ')[1] || ''}
+                            </span>
+                        </div>
                     </div>
                 )}
             </div>
 
-            {/* TOP RIGHT: Icon */}
-            <div className="absolute top-12 right-12 opacity-20">
-                <img src="/said.png" alt="" className="w-32 h-32 rounded-full grayscale mix-blend-screen" />
+            {/* TOP RIGHT: Removed Image, Added Minimal Decorative corner */}
+            <div className="absolute top-10 right-10 opacity-30">
+                <div className="w-20 h-20 border-t-2 border-r-2 border-amber-100/50 rounded-tr-3xl"></div>
             </div>
 
-            {/* BORDERS */}
-            <div className="absolute top-8 left-8 w-[calc(100%-64px)] h-[calc(100%-64px)] border border-amber-500/20 rounded-[3rem] pointer-events-none"></div>
+            {/* BORDERS around content */}
+            <div className="absolute top-8 left-8 w-[calc(100%-64px)] h-[calc(100%-64px)] border border-amber-500/10 rounded-[3rem] pointer-events-none"></div>
 
             {/* MAIN CONTENT AREA */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-12 mt-24 mb-12">
-                <span className="text-[140px] text-amber-500/10 font-serif leading-none select-none mb-6 self-start transform -translate-x-4">“</span>
+            <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-16 mt-20 mb-12">
+
+                {/* Visual Quote Mark */}
+                <span className="text-[160px] text-amber-500/20 font-serif leading-none select-none mb-4 self-start transform -translate-x-8 translate-y-8">
+                    “
+                </span>
 
                 <div className="relative w-full">
-                    <p className={`font-serif text-[#f8fafc] leading-[1.6] tracking-wide drop-shadow-lg text-center
-                        ${text.length < 150 ? 'text-[58px]' :
-                            text.length < 300 ? 'text-[48px]' :
-                                text.length < 500 ? 'text-[42px]' : 'text-[36px]'}
-                    `} style={{ textShadow: '0 4px 16px rgba(0,0,0,0.6)' }}>
+                    <p className={`font-serif text-[#fefefe] leading-[1.7] tracking-wider drop-shadow-2xl text-center
+                        ${text.length < 150 ? 'text-[60px]' :
+                            text.length < 300 ? 'text-[50px]' :
+                                text.length < 500 ? 'text-[42px]' : 'text-[38px]'}
+                    `} style={{
+                            textShadow: '0 4px 20px rgba(0,0,0,0.8)',
+                            fontVariantLigatures: 'common-ligatures'
+                        }}>
                         {text}
                     </p>
                 </div>
 
                 {/* SIGNATURE */}
-                <div className="w-full flex justify-end mt-12 pr-4">
+                <div className="w-full flex justify-end mt-14 pr-8">
                     <div className="flex flex-col items-end">
-                        <div className="w-16 h-[1px] bg-amber-500/50 mb-4"></div>
                         <span
-                            className="text-amber-400 font-serif italic text-[36px] tracking-wide"
-                            style={{ fontFamily: text.length > 0 ? 'inherit' : 'serif', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
+                            className="text-amber-400 font-serif italic text-[38px] tracking-wide"
+                            style={{
+                                fontFamily: 'cursive', // Trying to look more like signature/handwriting style if font matches
+                                textShadow: '0 2px 10px rgba(0,0,0,0.9)'
+                            }}
                         >
                             {author}
                         </span>
+                        <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-amber-500/60 to-transparent mt-2"></div>
                     </div>
                 </div>
             </div>
 
             {/* FOOTER */}
-            <div className="flex flex-col items-center gap-5 z-10 w-full shrink-0 pb-12">
-                <div className="flex flex-col items-center opacity-90 scale-100">
-                    <span className="text-amber-100/60 text-[26px] font-serif italic mb-4 tracking-wider">...devamı ve daha fazlası</span>
-                    <div className="flex items-center gap-5 bg-black/40 px-8 py-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl">
-                        <img src="/said.png" alt="" className="w-16 h-16 rounded-full ring-2 ring-amber-500/30 shadow-lg object-cover" />
-                        <span className="text-amber-50 text-[32px] font-mono tracking-[0.1em] lowercase font-medium drop-shadow-md">e-risale.github.io</span>
+            <div className="flex flex-col items-center gap-6 z-10 w-full shrink-0 pb-16">
+                <div className="flex flex-col items-center opacity-80 scale-100">
+                    <span className="text-amber-100/50 text-[24px] font-serif italic mb-3 tracking-widest">...devamı ve daha fazlası</span>
+                    <div className="flex items-center gap-4 bg-black/20 px-6 py-3 rounded-full border border-white/5 backdrop-blur-sm shadow-xl">
+                        <span className="text-amber-50 text-[20px] font-mono tracking-[0.2em] font-light opacity-90">E-RISALE.GITHUB.IO</span>
                     </div>
                 </div>
             </div>
