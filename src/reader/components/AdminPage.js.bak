@@ -1,0 +1,318 @@
+import React, { useState } from 'react';
+
+const AdminPage = ({
+    onBack,
+    feedbacks,
+    isLoading,
+    onDelete,
+    onMarkRead,
+    onApprove,
+    onArchive,
+    onDeleteAll,
+    onExport,
+    onReply, // YENİ
+    darkMode
+}) => {
+    const [activeTab, setActiveTab] = useState('new'); // new, pending, approved, archived, reports
+    const [replyModeId, setReplyModeId] = useState(null);
+    const [replyText, setReplyText] = useState("");
+    const [selectedFeedback, setSelectedFeedback] = useState(null);
+
+    const handleOpenReply = (fb) => {
+        setReplyModeId(fb.id);
+        setReplyText(fb.reply || "");
+    };
+
+    const handleSendReply = async () => {
+        if (!replyModeId) return;
+        await onReply(replyModeId, replyText);
+        setReplyModeId(null);
+        setReplyText("");
+    };
+
+    // İstemci tarafı filtreleme
+    const getFilteredFeedbacks = () => {
+        if (!feedbacks) return [];
+        return feedbacks.filter(fb => {
+            const isReport = ['bug', 'typo'].includes(fb.category);
+            const status = fb.status || 'unread';
+
+            // Raporlar Sekmesi (Tüm hata/tashih bildirimleri burada, arşivlenmişler hariç)
+            if (activeTab === 'reports') return isReport && status !== 'archived';
+
+            // Diğer sekmelerden raporları HARİÇ TUTUYORUZ
+            if (activeTab === 'new') return !isReport && (status === 'unread' || status === 'new');
+            if (activeTab === 'pending') return !isReport && status === 'read';
+            if (activeTab === 'approved') return !isReport && status === 'approved';
+
+            // Arşivde hepsi bir arada olabilir veya ayrılabilir. Şimdilik hepsi.
+            if (activeTab === 'archived') return status === 'archived';
+
+            return false;
+        });
+    };
+
+    const filteredFeedbacks = getFilteredFeedbacks();
+
+    // Tab Counts
+    const counts = {
+        new: feedbacks?.filter(f => !['bug', 'typo'].includes(f.category) && (f.status === 'unread' || f.status === 'new')).length || 0,
+        pending: feedbacks?.filter(f => !['bug', 'typo'].includes(f.category) && f.status === 'read').length || 0,
+        approved: feedbacks?.filter(f => !['bug', 'typo'].includes(f.category) && f.status === 'approved').length || 0,
+        reports: feedbacks?.filter(f => ['bug', 'typo'].includes(f.category) && f.status !== 'archived').length || 0,
+        archived: feedbacks?.filter(f => f.status === 'archived').length || 0
+    };
+
+    // Detail Modal
+    const FeedbackDetailModal = ({ fb, onClose }) => {
+        if (!fb) return null;
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+                <div className={`w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6 relative ${darkMode ? 'bg-[#1a1b1e] border border-gray-700' : 'bg-white'}`} onClick={e => e.stopPropagation()}>
+                    <button onClick={onClose} className="absolute top-4 right-4 text-2xl opacity-50 hover:opacity-100">×</button>
+
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                            {fb.name ? fb.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div>
+                            <div className="font-bold text-lg">{fb.name || 'Anonim'}</div>
+                            <div className="opacity-60 text-sm">
+                                {fb.date?.toDate ? fb.date.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Tarih yok'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className={`px-2 py-1 inline-block rounded text-xs font-bold uppercase ${fb.category === 'bug' ? 'bg-red-100 text-red-800' : 'bg-blue-50 text-blue-800'}`}>
+                            {fb.category === 'bug' ? 'Teknik Hata' :
+                                fb.category === 'typo' ? 'Tashih' :
+                                    fb.category === 'suggestion' ? 'İçerik Önerisi' :
+                                        'Genel Yorum'}
+                        </div>
+
+                        <div className="text-sm font-mono opacity-50 border-b pb-2">Konum: {fb.page}</div>
+
+                        <div className={`p-4 rounded-xl text-lg leading-relaxed whitespace-pre-wrap ${darkMode ? 'bg-black/20 text-gray-200' : 'bg-gray-50 text-gray-800'}`}>
+                            {fb.feedback}
+                        </div>
+
+                        {fb.reply && (
+                            <div className={`p-4 rounded-xl border-l-4 ${darkMode ? 'bg-amber-900/20 border-amber-600' : 'bg-amber-50 border-amber-400'}`}>
+                                <div className="font-bold text-amber-600 text-sm mb-1">EDİTÖR YANITI:</div>
+                                <div>{fb.reply}</div>
+                            </div>
+                        )}
+
+                        {replyModeId === fb.id && (
+                            <div className="mt-4 animate-fade-in">
+                                <textarea
+                                    className={`w-full p-3 rounded-xl text-base border focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? 'bg-black/20 border-gray-600' : 'bg-white border-gray-300'}`}
+                                    rows="4"
+                                    placeholder="Yanıtınızı yazın..."
+                                    autoFocus
+                                    value={replyText}
+                                    onClick={e => e.stopPropagation()}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                />
+                                <div className="flex gap-2 mt-3 justify-end">
+                                    <button onClick={handleSendReply} className="px-6 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transform active:scale-95 transition-all">
+                                        Yanıtı Gönder
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div className={`min-h-screen transition-colors ${darkMode ? 'bg-[#1a1b1e] text-gray-200' : 'bg-[#fffbf2] text-gray-800'}`}>
+            {/* Header */}
+            <div className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-4 md:px-8 border-b backdrop-blur-md ${darkMode ? 'bg-[#1a1b1e]/90 border-gray-700' : 'bg-[#fffbf2]/90 border-[#edeae6]'}`}>
+                <div className="flex items-center gap-3">
+                    <button onClick={onBack} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
+                        ←
+                    </button>
+                    <h1 className="font-bold text-xl font-serif">Yönetim ve Yorum Paneli</h1>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={onExport} className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-gray-800' : 'border-amber-200 hover:bg-amber-50'}`}>
+                        📥 Excel
+                    </button>
+                    {activeTab === 'archived' && (
+                        <button onClick={onDeleteAll} className={`px-4 py-2 rounded-lg text-sm font-bold bg-amber-500 text-white hover:bg-amber-600 shadow-sm`}>
+                            🧹 Arşivlenmişleri Sil
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Tabs */}
+            <div className={`fixed top-16 left-0 right-0 z-20 border-b overflow-x-auto ${darkMode ? 'bg-[#1a1b1e] border-gray-700' : 'bg-[#fffbf2] border-[#edeae6]'}`}>
+                <div className="max-w-7xl mx-auto px-4 md:px-8 flex gap-8">
+                    <button
+                        onClick={() => setActiveTab('new')}
+                        className={`py-4 text-sm font-bold border-b-2 transition-colors relative whitespace-nowrap ${activeTab === 'new' ? 'border-[#8c4f4f] text-[#8c4f4f]' : 'border-transparent text-gray-400 hover:text-gray-500'}`}
+                    >
+                        Yorumlar (Yeni)
+                        {counts.new > 0 && <span className="ml-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{counts.new}</span>}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('pending')}
+                        className={`py-4 text-sm font-bold border-b-2 transition-colors relative whitespace-nowrap ${activeTab === 'pending' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-400 hover:text-gray-500'}`}
+                    >
+                        İncelenenler
+                        {counts.pending > 0 && <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>{counts.pending}</span>}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('approved')}
+                        className={`py-4 text-sm font-bold border-b-2 transition-colors relative whitespace-nowrap ${activeTab === 'approved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-400 hover:text-gray-500'}`}
+                    >
+                        Yayındakiler
+                        {counts.approved > 0 && <span className="ml-2 bg-green-100 text-green-600 text-[10px] px-1.5 py-0.5 rounded-full">{counts.approved}</span>}
+                    </button>
+
+                    {/* RAPORLAR SEKMESİ */}
+                    <button
+                        onClick={() => setActiveTab('reports')}
+                        className={`py-4 text-sm font-bold border-b-2 transition-colors relative whitespace-nowrap ${activeTab === 'reports' ? 'border-purple-500 text-purple-600' : 'border-transparent text-gray-400 hover:text-gray-500'}`}
+                    >
+                        Bildirimler / Hata
+                        {counts.reports > 0 && <span className="ml-2 bg-purple-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{counts.reports}</span>}
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('archived')}
+                        className={`py-4 text-sm font-bold border-b-2 transition-colors relative whitespace-nowrap ${activeTab === 'archived' ? 'border-gray-500 text-gray-400' : 'border-transparent text-gray-400 hover:text-gray-500'}`}
+                    >
+                        Arşiv / Çöp
+                        {counts.archived > 0 && <span className="ml-2 bg-gray-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{counts.archived}</span>}
+                    </button>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="pt-40 pb-12 px-2 md:px-8 max-w-7xl mx-auto">
+                {isLoading ? (
+                    <div className="flex justify-center py-12">
+                        <div className="animate-spin text-4xl">⏳</div>
+                    </div>
+                ) : filteredFeedbacks.length === 0 ? (
+                    <div className="text-center py-20 opacity-50">
+                        <div className="text-6xl mb-4">📭</div>
+                        <h3 className="text-xl font-bold">Bu kategoride mesaj yok.</h3>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-2">
+                        {filteredFeedbacks.map(fb => (
+                            <div
+                                key={fb.id}
+                                onClick={() => setSelectedFeedback(fb)}
+                                className={`group p-3 rounded-lg border flex items-center gap-4 transition-all hover:shadow-md cursor-pointer ${darkMode ? 'bg-[#25262b] border-gray-700 hover:border-gray-600' : 'bg-white border-gray-200 hover:border-amber-300'}`}
+                            >
+                                {/* SOL: Aksiyon Butonları */}
+                                <div className="flex items-center gap-2 shrink-0 border-r pr-4 border-dashed border-gray-500/20" onClick={e => e.stopPropagation()}>
+                                    {/* YENİ sekmesi butonları */}
+                                    {activeTab === 'new' && (
+                                        <>
+                                            <button onClick={() => onMarkRead(fb.id)} className={`p-2 rounded text-xs font-bold ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`} title="İncele">
+                                                👁️
+                                            </button>
+                                            <button onClick={() => onApprove(fb.id)} className="p-2 bg-green-100 text-green-700 text-xs font-bold rounded hover:bg-green-200" title="Yayınla">
+                                                ✅
+                                            </button>
+                                            <button onClick={() => onArchive(fb.id)} className="p-2 bg-red-50 text-red-600 text-xs font-bold rounded hover:bg-red-100" title="Arşive Gönder">
+                                                🗑
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* İNCELENEN sekmesi butonları */}
+                                    {activeTab === 'pending' && (
+                                        <>
+                                            <button onClick={() => onApprove(fb.id)} className="p-2 bg-green-100 text-green-700 text-xs font-bold rounded hover:bg-green-200" title="Yayınla">
+                                                ✅
+                                            </button>
+                                            <button onClick={() => onArchive(fb.id)} className="p-2 bg-red-50 text-red-600 text-xs font-bold rounded hover:bg-red-100" title="Arşive Gönder">
+                                                🗑
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* YAYINDA sekmesi butonları */}
+                                    {activeTab === 'approved' && (
+                                        <>
+                                            <button onClick={() => { handleOpenReply(fb); setSelectedFeedback(fb); }} className="p-2 bg-amber-50 text-amber-700 text-xs font-bold rounded hover:bg-amber-100 border border-amber-200" title="Yanıtla">
+                                                💬
+                                            </button>
+                                            <button onClick={() => onArchive(fb.id)} className="p-2 bg-red-50 text-red-600 text-xs font-bold rounded hover:bg-red-100" title="Yayından Kaldır">
+                                                🚫
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* RAPORLAR sekmesi butonları */}
+                                    {activeTab === 'reports' && (
+                                        <>
+                                            <button onClick={() => onArchive(fb.id)} className="p-2 bg-gray-100 text-gray-600 text-xs font-bold rounded hover:bg-gray-200" title="Arşivle (Çözüldü)">
+                                                📂
+                                            </button>
+                                            <button onClick={() => onDelete(fb.id)} className="p-2 bg-red-50 text-red-600 text-xs font-bold rounded hover:bg-red-100" title="Tamamen Sil">
+                                                🗑
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {/* ARŞİV sekmesi butonları */}
+                                    {activeTab === 'archived' && (
+                                        <>
+                                            <button onClick={() => onMarkRead(fb.id)} className="p-2 bg-blue-50 text-blue-600 text-xs font-bold rounded hover:bg-blue-100" title="Geri Al">
+                                                ↩️
+                                            </button>
+                                            <button onClick={() => onDelete(fb.id)} className="p-2 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700" title="Tamamen Sil">
+                                                🗑
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* ORTA: Bilgi */}
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                                            {fb.name ? fb.name.charAt(0).toUpperCase() : '?'}
+                                        </div>
+                                        <div className={`font-bold text-sm truncate ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{fb.name || 'Anonim'}</div>
+                                        <div className="text-xs opacity-40 whitespace-nowrap">
+                                            {fb.date?.toDate ? fb.date.toDate().toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : ''}
+                                        </div>
+                                        {fb.likes && fb.likes.length > 0 && <span className="text-[10px] opacity-50">👍{fb.likes.length}</span>}
+                                    </div>
+                                    <div className={`text-sm truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        {fb.category === 'suggestion' && <span className="font-bold text-blue-500 mr-1">[ÖNERİ]</span>}
+                                        {fb.category === 'bug' && <span className="font-bold text-red-500 mr-1">[HATA]</span>}
+                                        {fb.feedback}
+                                    </div>
+                                </div>
+
+                                {/* SAĞ: Badge / Durum */}
+                                <div className="shrink-0 hidden md:block">
+                                    <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${fb.category === 'bug' ? 'bg-red-100 text-red-800' : 'bg-blue-50 text-blue-800'}`}>
+                                        {fb.category === 'bug' ? 'HATA' : fb.category === 'typo' ? 'TASHİH' : 'YORUM'}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {selectedFeedback && <FeedbackDetailModal fb={selectedFeedback} onClose={() => setSelectedFeedback(null)} />}
+        </div>
+    );
+};
+
+export default AdminPage;

@@ -1,0 +1,8 @@
+
+raw_texts klasörüne .txt dosyalarınızı atın. Terminalden aşağıdaki komutu çalıştırın:
+
+node scripts/convertBooks.js
+npm run tasi
+npm start  
+cd sozler-kitabi
+npm run build
