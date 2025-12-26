@@ -10,8 +10,94 @@ const THEMES = [
     { id: 'amber', name: 'Altın', from: '#b45309', via: '#d97706', to: '#78350f', label: 'Altın' }
 ];
 
+// Sub-component for the card content to ensure identical rendering
+const QuoteCardTemplate = ({ text, source, author, theme, isExport = false }) => {
+    return (
+        <div
+            className="w-full h-full relative flex flex-col justify-between p-[80px]"
+            style={{
+                background: `linear-gradient(135deg, ${theme.from} 0%, ${theme.via} 60%, ${theme.to} 100%)`
+            }}
+        >
+            {/* CSS Pattern Texture */}
+            <div className="absolute inset-0 opacity-[0.3] pointer-events-none mix-blend-overlay"
+                style={{
+                    backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 0% 0%, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+                    backgroundSize: '40px 40px, 24px 24px'
+                }}>
+            </div>
+            {/* Vignette Overlay */}
+            <div className="absolute inset-0 pointer-events-none"
+                style={{ background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)' }}>
+            </div>
+
+            {/* TOP LEFT: Book & Chapter Info */}
+            <div className="absolute top-12 left-12 max-w-[600px] text-left z-20">
+                {source && (
+                    <div className="flex flex-col gap-2">
+                        <div className="h-1 w-24 bg-amber-500/50 mb-2"></div>
+                        <span className="text-amber-100/90 text-[36px] font-bold font-serif leading-tight drop-shadow-lg">
+                            {source.split(' / ')[0]}
+                        </span>
+                        <span className="text-amber-100/60 text-[28px] font-light font-serif italic">
+                            {source.split(' / ')[1] || ''}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* TOP RIGHT: Icon */}
+            <div className="absolute top-12 right-12 opacity-20">
+                <img src="/said.png" alt="" className="w-32 h-32 rounded-full grayscale mix-blend-screen" />
+            </div>
+
+            {/* BORDERS */}
+            <div className="absolute top-8 left-8 w-[calc(100%-64px)] h-[calc(100%-64px)] border border-amber-500/20 rounded-[3rem] pointer-events-none"></div>
+
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-12 mt-24 mb-12">
+                <span className="text-[140px] text-amber-500/10 font-serif leading-none select-none mb-6 self-start transform -translate-x-4">“</span>
+
+                <div className="relative w-full">
+                    <p className={`font-serif text-[#f8fafc] leading-[1.6] tracking-wide drop-shadow-lg text-center
+                        ${text.length < 150 ? 'text-[58px]' :
+                            text.length < 300 ? 'text-[48px]' :
+                                text.length < 500 ? 'text-[42px]' : 'text-[36px]'}
+                    `} style={{ textShadow: '0 4px 16px rgba(0,0,0,0.6)' }}>
+                        {text}
+                    </p>
+                </div>
+
+                {/* SIGNATURE */}
+                <div className="w-full flex justify-end mt-12 pr-4">
+                    <div className="flex flex-col items-end">
+                        <div className="w-16 h-[1px] bg-amber-500/50 mb-4"></div>
+                        <span
+                            className="text-amber-400 font-serif italic text-[36px] tracking-wide"
+                            style={{ fontFamily: text.length > 0 ? 'inherit' : 'serif', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
+                        >
+                            {author}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="flex flex-col items-center gap-5 z-10 w-full shrink-0 pb-12">
+                <div className="flex flex-col items-center opacity-90 scale-100">
+                    <span className="text-amber-100/60 text-[26px] font-serif italic mb-4 tracking-wider">...devamı ve daha fazlası</span>
+                    <div className="flex items-center gap-5 bg-black/40 px-8 py-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl">
+                        <img src="/said.png" alt="" className="w-16 h-16 rounded-full ring-2 ring-amber-500/30 shadow-lg object-cover" />
+                        <span className="text-amber-50 text-[32px] font-mono tracking-[0.1em] lowercase font-medium drop-shadow-md">e-risale.github.io</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman Said Nursi" }) => {
-    const cardRef = useRef(null);
+    const exportRef = useRef(null); // Ref for the hidden export element
     const [isGenerating, setIsGenerating] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState(THEMES[0]);
     const { showToast } = useToast();
@@ -24,10 +110,9 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
 
     useEffect(() => {
         const calculateScale = () => {
-            if (!cardRef.current) return;
             const cardW = 1080;
             const cardH = 1350;
-            const availableH = window.innerHeight * 0.75; // Increased view area
+            const availableH = window.innerHeight * 0.75;
             const availableW = Math.min(window.innerWidth * 0.95, 480);
 
             const hScale = availableH / cardH;
@@ -47,17 +132,23 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
     if (!isOpen) return null;
 
     const handleDownload = async () => {
-        if (!cardRef.current) return;
+        if (!exportRef.current) return;
         setIsGenerating(true);
         try {
-            await new Promise(r => setTimeout(r, 200));  // Wait a bit longer
-            const canvas = await html2canvas(cardRef.current, {
-                scale: 2,
+            await new Promise(r => setTimeout(r, 200));
+            // Capture the HIDDEN export element, not the scaled preview
+            const canvas = await html2canvas(exportRef.current, {
+                scale: 1, // Already 1080p in DOM, no need to scale up much
                 backgroundColor: null,
                 useCORS: true,
                 allowTaint: true,
                 logging: false,
-                ignoreElements: (element) => element.id === 'ignore-me'
+                width: 1080,
+                height: 1350,
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: 1080,
+                windowHeight: 1350
             });
 
             const image = canvas.toDataURL("image/png", 0.9);
@@ -83,7 +174,7 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
                 <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-xl">✕</button>
             </div>
 
-            {/* PREVIEW CONTAINER */}
+            {/* PREVIEW CONTAINER (Scaled for View) */}
             <div
                 className="relative flex items-center justify-center shadow-2xl rounded-2xl ring-1 ring-white/10 bg-[#1a1a1a] touch-none"
                 style={{
@@ -103,87 +194,27 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
                     overflow: 'hidden',
                     borderRadius: '0px'
                 }}>
-                    <div
-                        ref={cardRef}
-                        className="w-full h-full relative flex flex-col justify-between p-[80px]"
-                        style={{
-                            background: `linear-gradient(135deg, ${selectedTheme.from} 0%, ${selectedTheme.via} 60%, ${selectedTheme.to} 100%)`
-                        }}
-                    >
-                        {/* CSS Pattern Texture (No External Image = No CORS Errors) */}
-                        <div className="absolute inset-0 opacity-[0.3] pointer-events-none mix-blend-overlay"
-                            style={{
-                                backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 0% 0%, rgba(255,255,255,0.05) 1px, transparent 1px)`,
-                                backgroundSize: '40px 40px, 24px 24px'
-                            }}>
-                        </div>
-                        {/* Vignette Overlay */}
-                        <div className="absolute inset-0 pointer-events-none"
-                            style={{ background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)' }}>
-                        </div>
+                    {/* RENDER TEMPLATE FOR PREVIEW */}
+                    <QuoteCardTemplate
+                        text={safeText}
+                        source={source}
+                        author={author}
+                        theme={selectedTheme}
+                    />
+                </div>
+            </div>
 
-                        {/* TOP LEFT: Book & Chapter Info */}
-                        <div className="absolute top-12 left-12 max-w-[600px] text-left z-20">
-                            {source && (
-                                <div className="flex flex-col gap-2">
-                                    <div className="h-1 w-24 bg-amber-500/50 mb-2"></div>
-                                    <span className="text-amber-100/90 text-[32px] font-bold font-serif leading-tight drop-shadow-lg">
-                                        {source.split(' / ')[0]}
-                                    </span>
-                                    <span className="text-amber-100/60 text-[26px] font-light font-serif italic">
-                                        {source.split(' / ')[1] || ''}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* TOP RIGHT: Icon or Decorative Element */}
-                        <div className="absolute top-12 right-12 opacity-20">
-                            <img src="/said.png" alt="" className="w-32 h-32 rounded-full grayscale mix-blend-screen" />
-                        </div>
-
-                        {/* BORDERS */}
-                        <div className="absolute top-8 left-8 w-[calc(100%-64px)] h-[calc(100%-64px)] border border-amber-500/20 rounded-[3rem] pointer-events-none"></div>
-
-                        {/* MAIN CONTENT AREA */}
-                        <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-12 mt-24 mb-12">
-                            <span className="text-[140px] text-amber-500/10 font-serif leading-none select-none mb-6 self-start transform -translate-x-4">“</span>
-
-                            <div className="relative w-full">
-                                <p className={`font-serif text-[#f8fafc] leading-[1.6] tracking-wide drop-shadow-lg text-center
-                                    ${safeText.length < 150 ? 'text-[58px]' :
-                                        safeText.length < 300 ? 'text-[48px]' :
-                                            safeText.length < 500 ? 'text-[42px]' : 'text-[36px]'}
-                                `} style={{ textShadow: '0 4px 16px rgba(0,0,0,0.6)' }}>
-                                    {safeText}
-                                </p>
-                            </div>
-
-                            {/* SIGNATURE */}
-                            <div className="w-full flex justify-end mt-12 pr-4">
-                                <div className="flex flex-col items-end">
-                                    <div className="w-16 h-[1px] bg-amber-500/50 mb-4"></div>
-                                    <span
-                                        className="text-amber-400 font-serif italic text-[36px] tracking-wide"
-                                        style={{ fontFamily: safeText.length > 0 ? 'inherit' : 'serif', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
-                                    >
-                                        {author}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* FOOTER */}
-                        <div className="flex flex-col items-center gap-5 z-10 w-full shrink-0 pb-12">
-                            <div className="flex flex-col items-center opacity-90 scale-100">
-                                <span className="text-amber-100/60 text-[26px] font-serif italic mb-4 tracking-wider">...devamı ve daha fazlası</span>
-                                <div className="flex items-center gap-5 bg-black/40 px-8 py-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl">
-                                    <img src="/said.png" alt="" className="w-16 h-16 rounded-full ring-2 ring-amber-500/30 shadow-lg object-cover" />
-                                    <span className="text-amber-50 text-[32px] font-mono tracking-[0.1em] lowercase font-medium drop-shadow-md">e-risale.github.io</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            {/* OFF-SCREEN EXPORT CONTAINER (Full Resolution, Unscaled) */}
+            <div style={{ position: 'fixed', left: '-10000px', top: 0, width: '1080px', height: '1350px', zIndex: -1 }}>
+                <div ref={exportRef} style={{ width: '1080px', height: '1350px' }}>
+                    {/* RENDER TEMPLATE FOR EXPORT */}
+                    <QuoteCardTemplate
+                        text={safeText}
+                        source={source}
+                        author={author}
+                        theme={selectedTheme}
+                        isExport={true}
+                    />
                 </div>
             </div>
 
