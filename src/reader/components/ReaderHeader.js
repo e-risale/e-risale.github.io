@@ -1,7 +1,7 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const FONTS = ['Lora', 'Merriweather', 'Roboto', 'Open Sans'];
+const FONTS = ['Lora', 'Merriweather', 'Roboto', 'Open Sans', 'Noto Naskh Arabic'];
 
 const ReaderHeader = ({
     showControls,
