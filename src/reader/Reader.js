@@ -259,27 +259,32 @@ const Reader = React.forwardRef(({
             {/* CIMBIZ BUTONU (Selection Tooltip) */}
             {selectionRect && (
                 <div
-                    className="absolute z-[100] flex gap-3 animate-in zoom-in duration-200"
-                    style={{ top: selectionRect.top, left: selectionRect.left }}
+                    className={`z-[100] flex gap-3 animate-in zoom-in duration-200 
+                        ${window.innerWidth < 768
+                            ? "fixed bottom-8 left-4 right-4 justify-center bg-[#1a1b1e]/95 p-3 rounded-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+                            : "absolute"
+                        }`}
+                    style={window.innerWidth < 768 ? {} : { top: selectionRect.top, left: selectionRect.left }}
                     onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                 >
                     <button
                         onClick={() => { setIsFeedbackModalOpen(true); setFeedbackCategory("suggestion"); setSelectedText(selectionRect.text); setSelectionRect(null); }}
-                        className="bg-blue-600 text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-bold hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-2 border border-white/20"
+                        className={`bg-blue-600 text-white rounded-full shadow-lg font-bold hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-2 border border-white/20 ${window.innerWidth < 768 ? "flex-1 justify-center py-3 text-sm" : "px-5 py-2.5 text-sm"}`}
                     >
-                        <span className="text-lg">💬</span> Çeviri Öner
+                        <span className="text-lg">💬</span> {window.innerWidth < 768 ? "Çeviri" : "Çeviri Öner"}
                     </button>
                     <button
                         onClick={() => { setIsFeedbackModalOpen(true); setFeedbackCategory("typo"); setSelectedText(selectionRect.text); setSelectionRect(null); }}
-                        className="bg-red-500 text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-bold hover:bg-red-600 hover:scale-105 transition-all flex items-center gap-2 border border-white/20"
+                        className={`bg-red-500 text-white rounded-full shadow-lg font-bold hover:bg-red-600 hover:scale-105 transition-all flex items-center gap-2 border border-white/20 ${window.innerWidth < 768 ? "flex-1 justify-center py-3 text-sm" : "px-5 py-2.5 text-sm"}`}
                     >
-                        <span className="text-lg">⚠️</span> Hata Bildir
+                        <span className="text-lg">⚠️</span> {window.innerWidth < 768 ? "Hata" : "Hata Bildir"}
                     </button>
                     <button
                         onClick={() => { setIsQuoteModalOpen(true); setSelectedText(selectionRect.text); setSelectionRect(null); }}
-                        className="bg-amber-600 text-white px-5 py-2.5 rounded-full shadow-2xl text-sm font-bold hover:bg-amber-700 hover:scale-105 transition-all flex items-center gap-2 border border-white/20"
+                        className={`bg-amber-600 text-white rounded-full shadow-lg font-bold hover:bg-amber-700 hover:scale-105 transition-all flex items-center gap-2 border border-white/20 ${window.innerWidth < 768 ? "flex-1 justify-center py-3 text-sm" : "px-5 py-2.5 text-sm"}`}
                     >
-                        <span className="text-lg">📷</span> Söz Paylaş
+                        <span className="text-lg">📷</span> {window.innerWidth < 768 ? "Paylaş" : "Söz Paylaş"}
                     </button>
                 </div>
             )}

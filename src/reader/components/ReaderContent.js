@@ -830,18 +830,65 @@ const ReaderContent = forwardRef(({
         </div>
     );
 
-    // Handle Selection Logic (Same as before)
-    const handleMouseUp = () => {
-        const selection = window.getSelection();
-        const text = selection.toString().trim();
-        if (text.length > 2) {
+
+
+    // --- SELECTION HANDLING ---
+    // Handle Selection Logic (Enhanced for Mobile)
+    const handleSelectionChange = useRef((e) => {
+        // Debounce selection updates
+        if (window.selectionTimeout) clearTimeout(window.selectionTimeout);
+
+        window.selectionTimeout = setTimeout(() => {
+            const selection = window.getSelection();
+
+            // Basic valid selection check
+            if (!selection || selection.toString().trim().length < 2) {
+                // Only clear if we really have no selection (sometimes on mobile it flickers)
+                // But we act conversatively to not close accidental popup
+                // Actually, if selection is cleared, we should clear rect.
+                if (!selection || selection.isCollapsed) {
+                    setSelectionRect(null);
+                }
+                return;
+            }
+
+            const text = selection.toString().trim();
             const range = selection.getRangeAt(0);
             const rect = range.getBoundingClientRect();
+
+            // Check if selection is inside our content
+            if (contentRef.current && !contentRef.current.contains(selection.anchorNode)) return;
+
             setSelectionRect({
                 top: rect.top + window.scrollY - 50,
                 left: rect.left + (rect.width / 2) - 80,
                 text: text
             });
+        }, 300); // 300ms delay to wait for mobile selection handle to settle
+    });
+
+    useEffect(() => {
+        document.addEventListener('selectionchange', handleSelectionChange.current);
+        return () => {
+            document.removeEventListener('selectionchange', handleSelectionChange.current);
+            if (window.selectionTimeout) clearTimeout(window.selectionTimeout);
+        };
+    }, []);
+
+    const handleMouseUp = () => {
+        // Fallback for desktop immediate response
+        if (window.innerWidth >= 768) {
+            const selection = window.getSelection();
+            const text = selection.toString().trim();
+            if (text.length > 2) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+                setSelectionRect({
+                    top: rect.top + window.scrollY - 50,
+                    left: rect.left + (rect.width / 2) - 80,
+                    text: text
+                });
+            }
         }
     };
 
