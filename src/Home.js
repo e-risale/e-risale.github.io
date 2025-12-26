@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { auth, loginWithGoogle } from './firebase';
-// import useGoogleOneTap from './reader/hooks/useGoogleOneTap';
+import useGoogleOneTap from './reader/hooks/useGoogleOneTap';
 import UserMenu from './components/UserMenu';
 import LicenseModal from './components/modals/LicenseModal';
 
@@ -10,7 +10,7 @@ export default function Home({ onNavigate, isAdmin, darkMode, toggleDarkMode, on
     const [isLicenseOpen, setIsLicenseOpen] = useState(false);
 
     // Google One Tap Hook'u (Kullanıcı yoksa çalışır)
-    // useGoogleOneTap(user);
+    useGoogleOneTap(user);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((currentUser) => {
