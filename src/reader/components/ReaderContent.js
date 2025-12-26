@@ -172,7 +172,7 @@ const ChunkItem = React.memo(({ chunk, index, textMode, fontSize, fontFamily, da
             }
 
             const isArabic = isArabicText(part);
-            const activeFontFamily = isArabic ? "'Noto Naskh Arabic', serif" : `'${fontFamily}', serif`;
+            const activeFontFamily = isArabic ? "'Noto Naskh Arabic', serif" : `${fontFamily}, serif`;
             const baseStyle = {
                 fontFamily: activeFontFamily,
                 fontSize: isArabic ? `${fontSize * 1.3 * scale}px` : `${fontSize * scale}px`,
@@ -242,7 +242,7 @@ const ChunkItem = React.memo(({ chunk, index, textMode, fontSize, fontFamily, da
 
             let cleanLine = line;
             let containerClass = `mb-4 text-justify indent-8 transition-colors ${darkMode ? 'text-gray-300' : 'text-gray-800'}`;
-            let localStyle = { fontFamily: `'${fontFamily}', serif`, fontSize: `${fontSize}px`, lineHeight: '1.8' };
+            let localStyle = { fontFamily: `${fontFamily}, serif`, fontSize: `${fontSize}px`, lineHeight: '1.8' };
             let lineScale = 1;
 
             // --- HEADER LOGIC ---
