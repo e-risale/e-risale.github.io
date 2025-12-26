@@ -303,17 +303,23 @@ const Reader = React.forwardRef(({
                     user={user}
                     onQuickBookmark={handleQuickBookmark}
                     onBack={onBack}
+                    // Font Props Passed to Header now
+                    fontSize={fontSize}
+                    changeFontSize={changeFontSize}
+                    fontFamily={fontFamily}
+                    setFontFamily={setFontFamily}
+                    // Menu Action Callbacks
+                    onOpenQuoteModal={() => setIsQuoteModalOpen(true)}
+                    onOpenFeedback={() => setIsFeedbackModalOpen(true)}
+                    onLogout={logout}
+                    onGoToAdmin={() => onSwitchMode('admin')}
                 />
             </div>
 
             {/* MAIN CONTENT AREA - Flex-row to hold Sidebar + Content */}
             <div className="flex-1 flex overflow-hidden relative">
 
-                {/* SIDEBAR - Absolute or Conditional Component logic handles it? 
-                    ReaderSidebar genelde fixed overlay veya absolute olarak kodlanmış olabilir.
-                    ReaderSidebar kodunu şu an göremiyorum ama genelde 'fixed inset-y-0' kullanılıyor.
-                    Eğer fixed ise bu container içinde kalmayabilir. Sorun değil, sidebar zaten çekmece gibi.
-                */}
+                {/* SIDEBAR */}
                 <ReaderSidebar
                     isOpen={sidebarOpen}
                     activeBookId={activeBookId}
@@ -373,7 +379,7 @@ const Reader = React.forwardRef(({
                 onOpenSearch={() => setIsSearchModalOpen(true)}
                 onOpenBookmarks={() => setIsBookmarkModalOpen(true)}
                 onQuickBookmark={handleQuickBookmark}
-                onOpenSettings={() => setIsSettingsModalOpen(true)}
+                onOpenSettings={() => { /* Removed */ }}
                 onOpenAdmin={() => onSwitchMode('admin')}
                 isAdmin={isAdmin}
                 unreadCount={unreadCount}
@@ -395,16 +401,7 @@ const Reader = React.forwardRef(({
                 darkMode={darkMode}
             />
 
-            <SettingsModal
-                isOpen={isSettingsModalOpen}
-                onClose={() => setIsSettingsModalOpen(false)}
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-                fontSize={fontSize}
-                changeFontSize={changeFontSize}
-                fontFamily={fontFamily}
-                setFontFamily={setFontFamily}
-            />
+            {/* SettingsModal Removed */}
 
             <FeedbackModal
                 isOpen={isFeedbackModalOpen}

@@ -1,29 +1,48 @@
 import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+
+const FONTS = ['Lora', 'Merriweather', 'Roboto', 'Open Sans'];
 
 const ReaderHeader = ({
     showControls,
     sidebarOpen,
     setSidebarOpen,
     activeChapterTitle,
-    textMode, // 'original' | 'tagged' | 'modern'
+    textMode,
     setTextMode,
     isAdmin,
     unreadCount,
     isToolsMenuOpen,
     setIsToolsMenuOpen,
-    onSwitchMode, // Editor modu için - ARTIK Header'dan çağırılmıyor (KALDIRILDI) ama prop kalsın mı? User "onSwitchMode'u iptal edelim" dedi görsel olarak. Prop kalabilir.
     darkMode,
     user,
     onQuickBookmark,
     activeBookTitle,
-    onBack
+    onBack,
+    fontSize,
+    changeFontSize,
+    fontFamily,
+    setFontFamily,
+    onOpenQuoteModal,
+    onOpenFeedback,
+    onLogout,
+    onGoToAdmin,
+    onSwitchMode
 }) => {
 
     const handleModeCycle = () => {
-        const modes = ['original', 'tagged', 'modern']; // Cycle order
+        const modes = ['original', 'tagged', 'modern'];
         const currentIdx = modes.indexOf(textMode);
         const nextMode = modes[(currentIdx + 1) % modes.length];
         setTextMode(nextMode);
+    };
+
+    const cycleFont = (direction) => {
+        const currentFontIndex = FONTS.indexOf(fontFamily);
+        let newIndex = currentFontIndex + direction;
+        if (newIndex < 0) newIndex = FONTS.length - 1;
+        if (newIndex >= FONTS.length) newIndex = 0;
+        setFontFamily(FONTS[newIndex]);
     };
 
     const getModeLabel = (mode) => {
@@ -44,10 +63,8 @@ const ReaderHeader = ({
         }
     };
 
-    // Style logic based on mode
     const getModeClasses = (mode) => {
         if (textMode !== mode) return darkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600';
-        // Active styles
         if (mode === 'original') return darkMode ? 'bg-amber-900/40 text-amber-200 border border-amber-800' : 'bg-amber-50 text-amber-900 border border-amber-200';
         if (mode === 'tagged') return darkMode ? 'bg-blue-900/40 text-blue-200 border border-blue-800' : 'bg-blue-50 text-blue-900 border border-blue-200';
         if (mode === 'modern') return darkMode ? 'bg-purple-900/40 text-purple-200 border border-purple-800' : 'bg-purple-50 text-purple-900 border border-purple-200';
@@ -87,7 +104,7 @@ const ReaderHeader = ({
 
                     <div className="flex items-center gap-3 relative shrink-0 ml-2">
 
-                        {/* MODE TOGGLE: DESKTOP (Segmented Control style) */}
+                        {/* MODE TOGGLE: DESKTOP */}
                         <div className={`hidden sm:flex items-center p-1 rounded-full border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
                             {['original', 'tagged', 'modern'].map(mode => (
                                 <button
@@ -101,12 +118,12 @@ const ReaderHeader = ({
                             ))}
                         </div>
 
-                        {/* MODE TOGGLE: MOBILE (Cycle Button) */}
+                        {/* MODE TOGGLE: MOBILE */}
                         <button
                             onClick={handleModeCycle}
                             className={`sm:hidden w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 border ${textMode === 'original' ? (darkMode ? 'bg-amber-900/30 text-amber-300 border-amber-700' : 'bg-amber-100 text-amber-800 border-amber-300') :
-                                    textMode === 'tagged' ? (darkMode ? 'bg-blue-900/30 text-blue-300 border-blue-700' : 'bg-blue-100 text-blue-800 border-blue-300') :
-                                        (darkMode ? 'bg-purple-900/30 text-purple-300 border-purple-700' : 'bg-purple-100 text-purple-800 border-purple-300')
+                                textMode === 'tagged' ? (darkMode ? 'bg-blue-900/30 text-blue-300 border-blue-700' : 'bg-blue-100 text-blue-800 border-blue-300') :
+                                    (darkMode ? 'bg-purple-900/30 text-purple-300 border-purple-700' : 'bg-purple-100 text-purple-800 border-purple-300')
                                 }`}
                         >
                             <span className="text-lg">{getModeIcon(textMode)}</span>
@@ -119,8 +136,6 @@ const ReaderHeader = ({
                         >
                             <span className="text-sm">🔖</span>
                         </button>
-
-                        {/* EDIT BUTTON REMOVED as requested */}
 
                         <button
                             onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
@@ -138,6 +153,99 @@ const ReaderHeader = ({
                                 </span>
                             )}
                         </button>
+
+                        {/* TOOLS DROPDOWN MENU */}
+                        <AnimatePresence>
+                            {isToolsMenuOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    transition={{ duration: 0.1 }}
+                                    className={`absolute top-12 right-0 w-72 rounded-xl shadow-2xl border overflow-hidden origin-top-right z-50 ${darkMode ? 'bg-[#1a1b1e] border-gray-700' : 'bg-white border-amber-100'}`}
+                                >
+
+                                    {/* FONT SETTINGS IN MENU */}
+                                    <div className={`p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800/30' : 'border-amber-50 bg-amber-50/30'}`}>
+                                        <div className="space-y-4">
+                                            {/* Font Family Carousel */}
+                                            <div className="flex items-center justify-between bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/10 p-1">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); cycleFont(-1); }}
+                                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-amber-100 text-amber-800'}`}
+                                                >
+                                                    ‹
+                                                </button>
+                                                <span
+                                                    className={`text-sm font-medium select-none truncate px-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+                                                    style={{ fontFamily: `'${fontFamily}', serif` }}
+                                                >
+                                                    {fontFamily}
+                                                </span>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); cycleFont(1); }}
+                                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-amber-100 text-amber-800'}`}
+                                                >
+                                                    ›
+                                                </button>
+                                            </div>
+
+                                            {/* Font Size */}
+                                            <div className="flex items-center justify-between gap-2">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); changeFontSize(-2); }}
+                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-white/10 text-gray-300' : 'border-amber-200 hover:bg-amber-50 text-amber-900'}`}
+                                                >
+                                                    A-
+                                                </button>
+                                                <span className={`text-sm font-bold font-serif w-8 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{fontSize}</span>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); changeFontSize(2); }}
+                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-white/10 text-gray-300' : 'border-amber-200 hover:bg-amber-50 text-amber-900'}`}
+                                                >
+                                                    A+
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Normal Menu Items */}
+                                    <div className="p-2 space-y-1">
+                                        <button onClick={() => { onOpenQuoteModal(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
+                                            <span>📷</span>
+                                            <span className="font-medium text-sm">Söz Paylaş</span>
+                                        </button>
+
+                                        <button onClick={() => { onOpenFeedback(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
+                                            <span>💬</span>
+                                            <span className="font-medium text-sm">Geri Bildirim</span>
+                                        </button>
+
+                                        {isAdmin && (
+                                            <>
+                                                <div className={`my-2 border-t ${darkMode ? 'border-gray-700' : 'border-amber-100'}`}></div>
+                                                <button onClick={() => { onGoToAdmin(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
+                                                    <span>🔧</span>
+                                                    <span className="font-medium text-sm">Yönetici Paneli</span>
+                                                </button>
+                                                <button onClick={() => { onSwitchMode(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
+                                                    <span>📝</span>
+                                                    <span className="font-medium text-sm">Editör Modu</span>
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {user && (
+                                            <button onClick={() => { onLogout(); setIsToolsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-red-50 text-red-600 mt-1">
+                                                <span>🚪</span>
+                                                <span className="font-medium text-sm">Çıkış Yap</span>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>
