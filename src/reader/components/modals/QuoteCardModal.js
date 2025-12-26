@@ -49,55 +49,78 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
 
                 {/* Card Preview Wrapper */}
                 {/* Card Preview Wrapper */}
-                <div className="flex justify-center bg-[#1a1b1e] p-4 md:p-8 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden relative">
+                <div className="flex justify-center bg-[#1a1b1e] p-4 rounded-xl shadow-2xl border border-gray-800 overflow-hidden relative">
 
                     {/* Size Warning */}
-                    {text.length > 600 ? (
+                    {text.length > 800 ? (
                         <div className="text-white text-center p-12 bg-red-900/20 border border-red-500/50 rounded-xl">
                             <div className="text-4xl mb-4">⚠️</div>
                             <h3 className="text-xl font-bold mb-2">Metin Çok Uzun</h3>
-                            <p className="opacity-80">Lütfen paylaşmak için daha kısa bir bölüm seçin. (Maks: 600 karakter)</p>
-                            <div className="mt-4 text-sm opacity-50">Seçili: {text.length} karakter</div>
+                            <p className="opacity-80">Lütfen daha kısa bir bölüm seçin. (Sınır: 800 karakter)</p>
                         </div>
                     ) : (
-                        /* THE CARD ITSELF */
-                        <div
-                            ref={cardRef}
-                            className="w-[1080px] max-w-full aspect-square md:aspect-[4/5] lg:aspect-[1.91/1] bg-gradient-to-br from-[#2c1a12] to-[#0f0f0f] relative flex flex-col items-center justify-center p-8 md:p-12 text-center select-none"
-                            style={{ background: 'linear-gradient(135deg, #1c1917 0%, #451a03 100%)' }}
-                        >
-                            {/* Decorative Elements */}
-                            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
-                                style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")' }}>
-                            </div>
-                            <div className="absolute top-6 left-6 w-16 h-16 md:w-24 md:h-24 border-t-2 border-l-2 border-amber-500/30 rounded-tl-3xl"></div>
-                            <div className="absolute bottom-6 right-6 w-16 h-16 md:w-24 md:h-24 border-b-2 border-r-2 border-amber-500/30 rounded-br-3xl"></div>
+                        /* THE CARD ITSELF - Rendered at 4:5 Ratio (Portrait) */
+                        <div className="relative">
+                            <div
+                                ref={cardRef}
+                                className="w-[1080px] h-[1350px] bg-gradient-to-br from-[#1c1917] via-[#2c1a12] to-[#000000] relative flex flex-col items-center justify-between p-16 text-center select-none"
+                                style={{
+                                    zoom: '0.35', // Preview Zoom (User sees small version)
+                                }}
+                            >
+                                {/* Background Patterns */}
+                                <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay"
+                                    style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")' }}>
+                                </div>
 
-                            {/* Content */}
-                            <div className="relative z-10 max-w-4xl flex flex-col items-center justify-center h-full">
-                                <span className="text-4xl md:text-6xl text-amber-500/20 font-serif block mb-4">“</span>
+                                {/* Decor Corners */}
+                                <div className="absolute top-8 left-8 w-32 h-32 border-t-4 border-l-4 border-amber-500/40 rounded-tl-[3rem]"></div>
+                                <div className="absolute bottom-8 right-8 w-32 h-32 border-b-4 border-r-4 border-amber-500/40 rounded-br-[3rem]"></div>
 
-                                {/* Dynamic Font Size Calculation */}
-                                <p className={`leading-relaxed text-[#eee] font-serif tracking-wide drop-shadow-md
-                                    ${text.length < 150 ? 'text-2xl md:text-3xl lg:text-4xl' :
-                                        text.length < 300 ? 'text-xl md:text-2xl lg:text-3xl' :
-                                            'text-lg md:text-xl lg:text-2xl'}
-                                `}>
-                                    {text}
-                                </p>
+                                {/* Top Spacer (for balance) */}
+                                <div className="h-16"></div>
 
-                                <div className="mt-8 flex flex-col items-center gap-2">
-                                    <div className="h-px w-24 bg-amber-500/50 mb-2"></div>
-                                    <span className="text-amber-400 font-bold text-lg md:text-xl uppercase tracking-widest">{author}</span>
-                                    {source && <span className="text-amber-200/60 text-xs md:text-sm tracking-wider font-light">{source}</span>}
+                                {/* MAIN CONTENT AREA */}
+                                <div className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl z-10">
+                                    <span className="text-8xl text-amber-500/20 font-serif leading-none mb-6">“</span>
+
+                                    <p className={`font-serif text-[#f2f2f2] leading-relaxed tracking-wide drop-shadow-lg
+                                        ${text.length < 150 ? 'text-6xl px-8' :
+                                            text.length < 300 ? 'text-5xl px-4' :
+                                                text.length < 500 ? 'text-4xl' : 'text-3xl'}
+                                    `}>
+                                        {text}
+                                    </p>
+
+                                    {/* Separator */}
+                                    <div className="w-32 h-1 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent mt-12 mb-8"></div>
+                                </div>
+
+                                {/* FOOTER AREA (Author + Source + Branding) */}
+                                <div className="flex flex-col items-center gap-4 z-10 pb-12">
+                                    <h3 className="text-amber-500 font-bold text-3xl uppercase tracking-[0.2em] drop-shadow-md">
+                                        {author}
+                                    </h3>
+
+                                    {source && (
+                                        <div className="px-6 py-2 border border-amber-500/30 rounded-full bg-black/20 backdrop-blur-sm">
+                                            <span className="text-amber-100/90 text-2xl font-light tracking-wider font-serif italic">
+                                                {source}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Website Branding */}
+                                    <div className="flex items-center gap-3 mt-6 opacity-60">
+                                        {/* Mock Logo if local file missing in rendering context, handled via text backup */}
+                                        <img src="/said.png" alt="" className="w-10 h-10 rounded-full border border-white/20" />
+                                        <span className="text-white text-lg font-mono tracking-widest lowercase">e-risale.github.io</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Branding */}
-                            <div className="absolute bottom-4 md:bottom-6 flex items-center gap-3 opacity-60">
-                                <img src="/said.png" alt="Logo" className="w-6 h-6 md:w-8 md:h-8 rounded-full border border-white/20 shadow-sm object-cover" />
-                                <span className="text-white/80 text-[10px] md:text-xs font-bold tracking-widest lowercase font-mono">e-risale.github.io</span>
-                            </div>
+                            {/* Overlay for "Preview Mode" interaction prevention */}
+                            <div className="absolute inset-0 z-20 bg-transparent"></div>
                         </div>
                     )}
                 </div>
