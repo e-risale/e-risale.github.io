@@ -16,22 +16,36 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
     const [selectedTheme, setSelectedTheme] = useState(THEMES[0]);
     const { showToast } = useToast();
 
+    // Ensure text is safe
+    const safeText = text || "Metin seçilmedi.";
+
     // Responsive Scale Calculation
-    const [scaleFactor, setScaleFactor] = useState(0.4); // Default start smaller
+    const [scaleFactor, setScaleFactor] = useState(0.4);
 
     useEffect(() => {
         const calculateScale = () => {
-            // Target Height: We want the card to fit in roughly 60vh of the screen height
-            // 1080x1350 is the source
-            const hScale = (window.innerHeight * 0.60) / 1350;
-            const wScale = (Math.min(window.innerWidth * 0.9, 360)) / 1080; // Limit preview width
+            if (!cardRef.current) return;
 
-            // Choose the smaller scale to ensure fit
-            setScaleFactor(Math.min(hScale, wScale));
+            // Standard size
+            const cardW = 1080;
+            const cardH = 1350;
+
+            // Available space (leave room for header/footer)
+            const availableH = window.innerHeight * 0.65;
+            const availableW = Math.min(window.innerWidth * 0.9, 450); // Slightly wider limit
+
+            const hScale = availableH / cardH;
+            const wScale = availableW / cardW;
+
+            // Use the smaller scale, but don't go below 0.2
+            setScaleFactor(Math.max(Math.min(hScale, wScale), 0.2));
         };
 
         if (isOpen) {
+            // Immediate calc
             calculateScale();
+            // Delay for safety
+            setTimeout(calculateScale, 100);
             window.addEventListener('resize', calculateScale);
         }
         return () => window.removeEventListener('resize', calculateScale);
@@ -43,21 +57,12 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
         if (!cardRef.current) return;
         setIsGenerating(true);
         try {
-            await new Promise(r => setTimeout(r, 100)); // Render wait
+            await new Promise(r => setTimeout(r, 100));
             const canvas = await html2canvas(cardRef.current, {
-                scale: 2, // 4K output
+                scale: 2,
                 backgroundColor: null,
                 useCORS: true,
                 allowTaint: true,
-                logging: false,
-                onclone: (clonedDoc) => {
-                    // Ensure the cloned element is visible and standard size
-                    // html2canvas handles this via the element ref, but transforms on parent might affect it?
-                    // We are capturing 'cardRef.current' which works fine even if scaled via CSS transform parent
-                    // BUT, sometimes transform affects coordinates.
-                    // If needed, we could clone the node into a hidden absolute div at scale 1.
-                    // For now, let's trust html2canvas with transform handling or the fact it reads valid DOM.
-                }
             });
 
             const image = canvas.toDataURL("image/png", 0.9);
@@ -65,11 +70,10 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
             link.href = image;
             link.download = `risale-soz-${Date.now()}.png`;
             link.click();
-
             showToast("Kart galeriye kaydedildi.", "success");
         } catch (error) {
-            console.error("Hata:", error);
-            showToast("Kaydedilemedi.", "error");
+            console.error(error);
+            showToast("Hata oluştu.", "error");
         } finally {
             setIsGenerating(false);
         }
@@ -86,62 +90,75 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
 
             {/* PREVIEW CONTAINER */}
             <div
-                className="relative flex items-center justify-center shadow-2xl overflow-hidden rounded-xl ring-1 ring-white/10 bg-black touch-none"
+                className="relative flex items-center justify-center shadow-2xl rounded-xl ring-1 ring-white/10 bg-[#121212] touch-none"
                 style={{
+                    // Dynamic size container
                     width: `${1080 * scaleFactor}px`,
                     height: `${1350 * scaleFactor}px`,
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* TRANSFORM WRAPPER: Matches the 1080x1350 card exactly but scaled down visually */}
+                {/* 
+                     Using a simple transform on the inner card. 
+                     Key: position absolute for the card to be centered or top-left.
+                     Since container matches scaled size, top-left is perfect.
+                  */}
                 <div style={{
                     width: '1080px',
                     height: '1350px',
                     transform: `scale(${scaleFactor})`,
                     transformOrigin: 'top left',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    overflow: 'hidden', // Clip content to card bounds
+                    borderRadius: '0px' // Card itself is square, container has radius
                 }}>
                     <div
                         ref={cardRef}
-                        className="w-[1080px] h-[1350px] relative flex flex-col items-center justify-between p-[100px] text-center"
+                        className="w-full h-full relative flex flex-col items-center justify-between p-[90px] text-center"
                         style={{
                             background: `linear-gradient(135deg, ${selectedTheme.from} 0%, ${selectedTheme.via} 60%, ${selectedTheme.to} 100%)`
                         }}
                     >
-                        {/* Texture */}
-                        <div className="absolute inset-0 opacity-[0.10] mix-blend-overlay pointer-events-none"
-                            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")' }}>
+                        {/* Texture - Removed mix-blend-overlay to be safe, used simple opacity */}
+                        <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
+                            style={{
+                                backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")',
+                                filter: 'contrast(1.5)'
+                            }}>
                         </div>
 
                         {/* Borders */}
-                        <div className="absolute top-12 left-12 w-48 h-48 border-t-[3px] border-l-[3px] border-amber-500/30 rounded-tl-[4rem]"></div>
-                        <div className="absolute bottom-12 right-12 w-48 h-48 border-b-[3px] border-r-[3px] border-amber-500/30 rounded-br-[4rem]"></div>
+                        <div className="absolute top-10 left-10 w-40 h-40 border-t-[3px] border-l-[3px] border-amber-500/30 rounded-tl-[3.5rem]"></div>
+                        <div className="absolute bottom-10 right-10 w-40 h-40 border-b-[3px] border-r-[3px] border-amber-500/30 rounded-br-[3.5rem]"></div>
 
                         {/* MAIN CONTENT AREA */}
-                        <div className="flex-1 flex flex-col items-center justify-center w-full z-10 overflow-hidden px-8">
-                            <span className="text-[120px] text-amber-500/10 font-serif leading-none select-none mb-4">“</span>
+                        <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-4">
+                            <span className="text-[120px] text-amber-500/10 font-serif leading-none select-none mb-4 font-normal">“</span>
 
                             <div className="relative w-full">
-                                <p className={`font-serif text-[#f8fafc] leading-[1.5] tracking-wide drop-shadow-xl
-                                    ${text.length < 150 ? 'text-[56px]' :
-                                        text.length < 300 ? 'text-[46px]' :
-                                            text.length < 500 ? 'text-[40px]' : 'text-[34px]'}
-                                `} style={{ textShadow: '0 4px 12px rgba(0,0,0,0.6)' }}>
-                                    {text}
+                                <p className={`font-serif text-[#f8fafc] leading-[1.6] tracking-wide drop-shadow-md
+                                    ${safeText.length < 150 ? 'text-[54px]' :
+                                        safeText.length < 300 ? 'text-[44px]' :
+                                            safeText.length < 500 ? 'text-[38px]' : 'text-[32px]'}
+                                `} style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                                    {safeText}
                                 </p>
                             </div>
 
-                            <div className="w-24 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mt-12 mb-8"></div>
+                            <div className="w-20 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mt-12 mb-8"></div>
                         </div>
 
                         {/* FOOTER */}
-                        <div className="flex flex-col items-center gap-4 z-10 w-full shrink-0 pb-8">
-                            <h3 className="text-amber-500 font-bold text-[36px] uppercase tracking-[0.2em] drop-shadow-lg font-sans">
+                        <div className="flex flex-col items-center gap-4 z-10 w-full shrink-0 pb-6">
+                            <h3 className="text-amber-500 font-bold text-[32px] uppercase tracking-[0.2em] drop-shadow-lg font-sans">
                                 {author}
                             </h3>
 
                             {source && (
                                 <div className="px-6 py-2 border border-amber-500/20 rounded-full bg-black/20 backdrop-blur-sm">
-                                    <span className="text-amber-100/90 text-[24px] font-light tracking-wide font-serif italic">
+                                    <span className="text-amber-100/90 text-[22px] font-light tracking-wide font-serif italic">
                                         {source}
                                     </span>
                                 </div>

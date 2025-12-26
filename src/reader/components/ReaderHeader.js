@@ -238,10 +238,7 @@ const ReaderHeader = ({
                                                     <span className="text-xl w-6 flex justify-center">🛡️</span>
                                                     <span className="font-medium text-sm">Yönetim Paneli</span>
                                                 </button>
-                                                <button onClick={() => { onSwitchMode(); setIsToolsMenuOpen(false); }} className={menuItemClass}>
-                                                    <span className="text-xl w-6 flex justify-center">📝</span>
-                                                    <span className="font-medium text-sm">Editör Modu</span>
-                                                </button>
+                                                {/* Editör Modu button removed */}
                                             </>
                                         )}
 
