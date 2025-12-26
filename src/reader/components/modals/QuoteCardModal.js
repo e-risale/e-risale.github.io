@@ -7,7 +7,7 @@ const THEMES = [
     { id: 'royal', name: 'Asil', from: '#1e1b4b', via: '#312e81', to: '#0f0529', label: 'Mor' },
     { id: 'ocean', name: 'Okyanus', from: '#022c22', via: '#0f766e', to: '#042f2e', label: 'Turkuaz' },
     { id: 'sunset', name: 'Gün Batımı', from: '#450a0a', via: '#7f1d1d', to: '#2a0a0a', label: 'Kızıl' },
-    { id: 'amber', name: 'Altın', from: '#b45309', via: '#d97706', to: '#78350f', label: 'Altın' } // Replacing Black with Amber
+    { id: 'amber', name: 'Altın', from: '#b45309', via: '#d97706', to: '#78350f', label: 'Altın' }
 ];
 
 const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman Said Nursi" }) => {
@@ -25,26 +25,19 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
     useEffect(() => {
         const calculateScale = () => {
             if (!cardRef.current) return;
-
-            // Standard size
             const cardW = 1080;
             const cardH = 1350;
-
-            // Available space (leave room for header/footer)
-            const availableH = window.innerHeight * 0.65;
-            const availableW = Math.min(window.innerWidth * 0.9, 450); // Slightly wider limit
+            const availableH = window.innerHeight * 0.75; // Increased view area
+            const availableW = Math.min(window.innerWidth * 0.95, 480);
 
             const hScale = availableH / cardH;
             const wScale = availableW / cardW;
 
-            // Use the smaller scale, but don't go below 0.2
             setScaleFactor(Math.max(Math.min(hScale, wScale), 0.2));
         };
 
         if (isOpen) {
-            // Immediate calc
             calculateScale();
-            // Delay for safety
             setTimeout(calculateScale, 100);
             window.addEventListener('resize', calculateScale);
         }
@@ -57,12 +50,14 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
         if (!cardRef.current) return;
         setIsGenerating(true);
         try {
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, 200));  // Wait a bit longer
             const canvas = await html2canvas(cardRef.current, {
                 scale: 2,
                 backgroundColor: null,
                 useCORS: true,
                 allowTaint: true,
+                logging: false,
+                ignoreElements: (element) => element.id === 'ignore-me'
             });
 
             const image = canvas.toDataURL("image/png", 0.9);
@@ -72,37 +67,31 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
             link.click();
             showToast("Kart galeriye kaydedildi.", "success");
         } catch (error) {
-            console.error(error);
-            showToast("Hata oluştu.", "error");
+            console.error("Download Error:", error);
+            showToast("Hata oluştu: " + error.message, "error");
         } finally {
             setIsGenerating(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200" onClick={onClose}>
 
             {/* Top Bar */}
-            <div className="w-full max-w-md flex justify-between items-center text-white mb-2 px-2" onClick={e => e.stopPropagation()}>
-                <h3 className="text-lg font-bold flex items-center gap-2">📷 Önizleme</h3>
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">✕</button>
+            <div className="w-full max-w-md flex justify-between items-center text-white mb-4 px-2" onClick={e => e.stopPropagation()}>
+                <h3 className="text-xl font-bold flex items-center gap-2">📷 Önizleme</h3>
+                <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-xl">✕</button>
             </div>
 
             {/* PREVIEW CONTAINER */}
             <div
-                className="relative flex items-center justify-center shadow-2xl rounded-xl ring-1 ring-white/10 bg-[#121212] touch-none"
+                className="relative flex items-center justify-center shadow-2xl rounded-2xl ring-1 ring-white/10 bg-[#1a1a1a] touch-none"
                 style={{
-                    // Dynamic size container
                     width: `${1080 * scaleFactor}px`,
                     height: `${1350 * scaleFactor}px`,
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                {/* 
-                     Using a simple transform on the inner card. 
-                     Key: position absolute for the card to be centered or top-left.
-                     Since container matches scaled size, top-left is perfect.
-                  */}
                 <div style={{
                     width: '1080px',
                     height: '1350px',
@@ -111,64 +100,86 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    overflow: 'hidden', // Clip content to card bounds
-                    borderRadius: '0px' // Card itself is square, container has radius
+                    overflow: 'hidden',
+                    borderRadius: '0px'
                 }}>
                     <div
                         ref={cardRef}
-                        className="w-full h-full relative flex flex-col items-center justify-between p-[90px] text-center"
+                        className="w-full h-full relative flex flex-col justify-between p-[80px]"
                         style={{
                             background: `linear-gradient(135deg, ${selectedTheme.from} 0%, ${selectedTheme.via} 60%, ${selectedTheme.to} 100%)`
                         }}
                     >
-                        {/* Texture - Removed mix-blend-overlay to be safe, used simple opacity */}
-                        <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
+                        {/* CSS Pattern Texture (No External Image = No CORS Errors) */}
+                        <div className="absolute inset-0 opacity-[0.3] pointer-events-none mix-blend-overlay"
                             style={{
-                                backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")',
-                                filter: 'contrast(1.5)'
+                                backgroundImage: `radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 0% 0%, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+                                backgroundSize: '40px 40px, 24px 24px'
                             }}>
                         </div>
+                        {/* Vignette Overlay */}
+                        <div className="absolute inset-0 pointer-events-none"
+                            style={{ background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)' }}>
+                        </div>
 
-                        {/* Borders */}
-                        <div className="absolute top-10 left-10 w-40 h-40 border-t-[3px] border-l-[3px] border-amber-500/30 rounded-tl-[3.5rem]"></div>
-                        <div className="absolute bottom-10 right-10 w-40 h-40 border-b-[3px] border-r-[3px] border-amber-500/30 rounded-br-[3.5rem]"></div>
+                        {/* TOP LEFT: Book & Chapter Info */}
+                        <div className="absolute top-12 left-12 max-w-[600px] text-left z-20">
+                            {source && (
+                                <div className="flex flex-col gap-2">
+                                    <div className="h-1 w-24 bg-amber-500/50 mb-2"></div>
+                                    <span className="text-amber-100/90 text-[32px] font-bold font-serif leading-tight drop-shadow-lg">
+                                        {source.split(' / ')[0]}
+                                    </span>
+                                    <span className="text-amber-100/60 text-[26px] font-light font-serif italic">
+                                        {source.split(' / ')[1] || ''}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* TOP RIGHT: Icon or Decorative Element */}
+                        <div className="absolute top-12 right-12 opacity-20">
+                            <img src="/said.png" alt="" className="w-32 h-32 rounded-full grayscale mix-blend-screen" />
+                        </div>
+
+                        {/* BORDERS */}
+                        <div className="absolute top-8 left-8 w-[calc(100%-64px)] h-[calc(100%-64px)] border border-amber-500/20 rounded-[3rem] pointer-events-none"></div>
 
                         {/* MAIN CONTENT AREA */}
-                        <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-4">
-                            <span className="text-[120px] text-amber-500/10 font-serif leading-none select-none mb-4 font-normal">“</span>
+                        <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-12 mt-24 mb-12">
+                            <span className="text-[140px] text-amber-500/10 font-serif leading-none select-none mb-6 self-start transform -translate-x-4">“</span>
 
                             <div className="relative w-full">
-                                <p className={`font-serif text-[#f8fafc] leading-[1.6] tracking-wide drop-shadow-md
-                                    ${safeText.length < 150 ? 'text-[54px]' :
-                                        safeText.length < 300 ? 'text-[44px]' :
-                                            safeText.length < 500 ? 'text-[38px]' : 'text-[32px]'}
-                                `} style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                                <p className={`font-serif text-[#f8fafc] leading-[1.6] tracking-wide drop-shadow-lg text-center
+                                    ${safeText.length < 150 ? 'text-[58px]' :
+                                        safeText.length < 300 ? 'text-[48px]' :
+                                            safeText.length < 500 ? 'text-[42px]' : 'text-[36px]'}
+                                `} style={{ textShadow: '0 4px 16px rgba(0,0,0,0.6)' }}>
                                     {safeText}
                                 </p>
                             </div>
 
-                            <div className="w-20 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mt-12 mb-8"></div>
+                            {/* SIGNATURE */}
+                            <div className="w-full flex justify-end mt-12 pr-4">
+                                <div className="flex flex-col items-end">
+                                    <div className="w-16 h-[1px] bg-amber-500/50 mb-4"></div>
+                                    <span
+                                        className="text-amber-400 font-serif italic text-[36px] tracking-wide"
+                                        style={{ fontFamily: safeText.length > 0 ? 'inherit' : 'serif', textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
+                                    >
+                                        {author}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         {/* FOOTER */}
-                        <div className="flex flex-col items-center gap-4 z-10 w-full shrink-0 pb-6">
-                            <h3 className="text-amber-500 font-bold text-[32px] uppercase tracking-[0.2em] drop-shadow-lg font-sans">
-                                {author}
-                            </h3>
-
-                            {source && (
-                                <div className="px-6 py-2 border border-amber-500/20 rounded-full bg-black/20 backdrop-blur-sm">
-                                    <span className="text-amber-100/90 text-[22px] font-light tracking-wide font-serif italic">
-                                        {source}
-                                    </span>
-                                </div>
-                            )}
-
-                            <div className="flex flex-col items-center mt-8 opacity-90 scale-90 origin-bottom">
-                                <span className="text-amber-100/40 text-[20px] font-serif italic mb-2 tracking-wider">...devamı ve daha fazlası</span>
-                                <div className="flex items-center gap-3 bg-black/20 px-5 py-2 rounded-xl border border-white/5">
-                                    <img src="/said.png" alt="" className="w-10 h-10 rounded-full ring-2 ring-white/10 shadow-lg object-cover" />
-                                    <span className="text-white text-[22px] font-mono tracking-[0.1em] lowercase font-medium">e-risale.github.io</span>
+                        <div className="flex flex-col items-center gap-5 z-10 w-full shrink-0 pb-12">
+                            <div className="flex flex-col items-center opacity-90 scale-100">
+                                <span className="text-amber-100/60 text-[26px] font-serif italic mb-4 tracking-wider">...devamı ve daha fazlası</span>
+                                <div className="flex items-center gap-5 bg-black/40 px-8 py-4 rounded-2xl border border-white/10 backdrop-blur-md shadow-2xl">
+                                    <img src="/said.png" alt="" className="w-16 h-16 rounded-full ring-2 ring-amber-500/30 shadow-lg object-cover" />
+                                    <span className="text-amber-50 text-[32px] font-mono tracking-[0.1em] lowercase font-medium drop-shadow-md">e-risale.github.io</span>
                                 </div>
                             </div>
                         </div>
