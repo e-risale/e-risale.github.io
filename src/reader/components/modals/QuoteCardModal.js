@@ -48,39 +48,58 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
                 </div>
 
                 {/* Card Preview Wrapper */}
-                <div className="flex justify-center bg-[#1a1b1e] p-8 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden">
-                    {/* THE CARD ITSELF */}
-                    <div
-                        ref={cardRef}
-                        className="w-[1080px] max-w-full aspect-square md:aspect-[4/5] lg:aspect-[1.91/1] bg-gradient-to-br from-[#2c1a12] to-[#0f0f0f] relative flex flex-col items-center justify-center p-12 text-center"
-                        style={{ background: 'linear-gradient(135deg, #1c1917 0%, #451a03 100%)' }}
-                    >
-                        {/* Decorative Elements */}
-                        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
-                            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")' }}>
-                        </div>
-                        <div className="absolute top-6 left-6 w-24 h-24 border-t-2 border-l-2 border-amber-500/30 rounded-tl-3xl"></div>
-                        <div className="absolute bottom-6 right-6 w-24 h-24 border-b-2 border-r-2 border-amber-500/30 rounded-br-3xl"></div>
+                {/* Card Preview Wrapper */}
+                <div className="flex justify-center bg-[#1a1b1e] p-4 md:p-8 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden relative">
 
-                        {/* Content */}
-                        <div className="relative z-10 max-w-3xl">
-                            <span className="text-6xl text-amber-500/20 font-serif block mb-4">“</span>
-                            <p className="text-2xl md:text-3xl lg:text-4xl leading-relaxed text-[#eee] font-serif tracking-wide drop-shadow-md">
-                                {text}
-                            </p>
-                            <div className="mt-8 flex flex-col items-center gap-2">
-                                <div className="h-px w-24 bg-amber-500/50 mb-2"></div>
-                                <span className="text-amber-400 font-bold text-xl uppercase tracking-widest">{author}</span>
-                                {source && <span className="text-amber-200/60 text-sm tracking-wider font-light">{source}</span>}
+                    {/* Size Warning */}
+                    {text.length > 600 ? (
+                        <div className="text-white text-center p-12 bg-red-900/20 border border-red-500/50 rounded-xl">
+                            <div className="text-4xl mb-4">⚠️</div>
+                            <h3 className="text-xl font-bold mb-2">Metin Çok Uzun</h3>
+                            <p className="opacity-80">Lütfen paylaşmak için daha kısa bir bölüm seçin. (Maks: 600 karakter)</p>
+                            <div className="mt-4 text-sm opacity-50">Seçili: {text.length} karakter</div>
+                        </div>
+                    ) : (
+                        /* THE CARD ITSELF */
+                        <div
+                            ref={cardRef}
+                            className="w-[1080px] max-w-full aspect-square md:aspect-[4/5] lg:aspect-[1.91/1] bg-gradient-to-br from-[#2c1a12] to-[#0f0f0f] relative flex flex-col items-center justify-center p-8 md:p-12 text-center select-none"
+                            style={{ background: 'linear-gradient(135deg, #1c1917 0%, #451a03 100%)' }}
+                        >
+                            {/* Decorative Elements */}
+                            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none"
+                                style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/arabesque.png")' }}>
+                            </div>
+                            <div className="absolute top-6 left-6 w-16 h-16 md:w-24 md:h-24 border-t-2 border-l-2 border-amber-500/30 rounded-tl-3xl"></div>
+                            <div className="absolute bottom-6 right-6 w-16 h-16 md:w-24 md:h-24 border-b-2 border-r-2 border-amber-500/30 rounded-br-3xl"></div>
+
+                            {/* Content */}
+                            <div className="relative z-10 max-w-4xl flex flex-col items-center justify-center h-full">
+                                <span className="text-4xl md:text-6xl text-amber-500/20 font-serif block mb-4">“</span>
+
+                                {/* Dynamic Font Size Calculation */}
+                                <p className={`leading-relaxed text-[#eee] font-serif tracking-wide drop-shadow-md
+                                    ${text.length < 150 ? 'text-2xl md:text-3xl lg:text-4xl' :
+                                        text.length < 300 ? 'text-xl md:text-2xl lg:text-3xl' :
+                                            'text-lg md:text-xl lg:text-2xl'}
+                                `}>
+                                    {text}
+                                </p>
+
+                                <div className="mt-8 flex flex-col items-center gap-2">
+                                    <div className="h-px w-24 bg-amber-500/50 mb-2"></div>
+                                    <span className="text-amber-400 font-bold text-lg md:text-xl uppercase tracking-widest">{author}</span>
+                                    {source && <span className="text-amber-200/60 text-xs md:text-sm tracking-wider font-light">{source}</span>}
+                                </div>
+                            </div>
+
+                            {/* Branding */}
+                            <div className="absolute bottom-4 md:bottom-6 flex items-center gap-3 opacity-60">
+                                <img src="/said.png" alt="Logo" className="w-6 h-6 md:w-8 md:h-8 rounded-full border border-white/20 shadow-sm object-cover" />
+                                <span className="text-white/80 text-[10px] md:text-xs font-bold tracking-widest lowercase font-mono">e-risale.github.io</span>
                             </div>
                         </div>
-
-                        {/* Branding */}
-                        <div className="absolute bottom-6 flex items-center gap-2 opacity-40">
-                            <div className="w-6 h-6 bg-white rounded-full"></div>
-                            <span className="text-white text-xs font-bold tracking-widest uppercase">Risale-i Nur Reader</span>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Footer / Actions */}
