@@ -19,49 +19,61 @@ const QuoteCardTemplate = ({ text, source, author, theme, isExport = false }) =>
                 background: `linear-gradient(180deg, ${theme.from} 0%, ${theme.via} 50%, ${theme.to} 100%)`
             }}
         >
-            {/* 1. SOPHISTICATED BACKGROUND PATTERN (CSS Only - Islamic Geometric Style) */}
-            <div className="absolute inset-0 opacity-[0.07] pointer-events-none mix-blend-screen"
+            {/* 1. NOISE TEXTURE (Paper feel, standard across all themes) */}
+            <div className="absolute inset-0 opacity-[0.15] pointer-events-none"
                 style={{
-                    backgroundImage: `
-                        radial-gradient(circle at 100% 50%, transparent 20%, #ffffff 21%, #ffffff 34%, transparent 35%, transparent),
-                        radial-gradient(circle at 0% 50%, transparent 20%, #ffffff 21%, #ffffff 34%, transparent 35%, transparent)
-                    `,
-                    backgroundSize: '60px 120px',
-                    backgroundPosition: '0 0, 30px 60px'
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
                 }}>
             </div>
 
-            {/* Vignette Overlay for Depth */}
+            {/* 2. VIGNETTE (Depth) */}
             <div className="absolute inset-0 pointer-events-none"
-                style={{ background: 'radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.6) 100%)' }}>
+                style={{ background: 'radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.5) 100%)' }}>
             </div>
 
-            {/* 2. BOTTOM SILHOUETTE (CSS Shapes) */}
-            <div className="absolute bottom-0 left-0 w-full h-[300px] pointer-events-none z-0 opacity-40">
-                {/* Rolling Hills / Domes Layer 1 */}
-                <div className="absolute bottom-[-50px] left-[-20%] w-[140%] h-[200px] rounded-[100%] bg-black/30 blur-xl"></div>
-                <div className="absolute bottom-[-20px] left-0 w-full h-[150px] bg-gradient-to-t from-black/60 to-transparent"></div>
-
-                {/* Decorative Vector-like Element at bottom right */}
-                <div className="absolute bottom-0 right-0 w-[400px] h-[300px] opacity-20"
-                    style={{
-                        background: 'radial-gradient(circle at 100% 100%, white 0%, transparent 60%)',
-                        clipPath: 'polygon(50% 100%, 100% 100%, 100% 50%, 80% 60%, 60% 80%)'
-                    }}>
-                </div>
+            {/* 3. ELEGANT BORDER (Risale Cover Style) */}
+            {/* Outer Border */}
+            <div className="absolute top-6 left-6 right-6 bottom-6 border-2 border-amber-200/20 rounded-[1rem] pointer-events-none"></div>
+            {/* Inner Border with corners */}
+            <div className="absolute top-9 left-9 right-9 bottom-9 border border-amber-100/30 rounded-[0.5rem] pointer-events-none">
+                {/* Decorative Corners */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-amber-100/60 -translate-x-[1px] -translate-y-[1px]"></div>
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-amber-100/60 translate-x-[1px] -translate-y-[1px]"></div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-amber-100/60 -translate-x-[1px] translate-y-[1px]"></div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-amber-100/60 translate-x-[1px] translate-y-[1px]"></div>
             </div>
 
+            {/* 4. CENTRAL MEDALLION (Subtle background geometry) */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.08] pointer-events-none"
+                style={{
+                    background: `
+                        radial-gradient(circle, transparent 20%, #ffffff 21%, transparent 22%),
+                        linear-gradient(45deg, transparent 48%, #ffffff 50%, transparent 52%),
+                        linear-gradient(-45deg, transparent 48%, #ffffff 50%, transparent 52%)
+                     `,
+                    transform: 'translate(-50%, -50%) rotate(45deg)',
+                    maskImage: 'radial-gradient(circle, black 30%, transparent 70%)',
+                    WebkitMaskImage: 'radial-gradient(circle, black 30%, transparent 70%)'
+                }}>
+            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-4 border-white/5 rounded-full pointer-events-none"></div>
+
+            {/* 5. BOTTOM HORIZON (Subtle Landscape) */}
+            <div className="absolute bottom-0 left-0 w-full h-[250px] pointer-events-none z-0 opacity-30">
+                <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                {/* Simple Hills */}
+                <div className="absolute bottom-[-40px] left-[-10%] w-[120%] h-[150px] rounded-[100%] bg-black/40 blur-2xl"></div>
+            </div>
 
             {/* TOP LEFT: Book & Chapter Info */}
-            <div className="absolute top-12 left-12 max-w-[700px] text-left z-20">
+            <div className="absolute top-16 left-16 max-w-[700px] text-left z-20 pl-4 pt-2">
                 {source && (
                     <div className="flex flex-col">
-                        {/* Removed the disconnected line */}
                         <span className="text-amber-100/95 text-[40px] font-bold font-serif leading-tight drop-shadow-xl tracking-wide">
                             {source.split(' / ')[0]}
                         </span>
-                        <div className="flex items-center gap-3 mt-1">
-                            <div className="h-[1px] w-12 bg-amber-200/40"></div>
+                        <div className="flex items-center gap-3 mt-2">
+                            <div className="h-[1px] w-16 bg-amber-200/50"></div>
                             <span className="text-amber-100/70 text-[26px] font-light font-serif italic">
                                 {source.split(' / ')[1] || ''}
                             </span>
@@ -70,48 +82,38 @@ const QuoteCardTemplate = ({ text, source, author, theme, isExport = false }) =>
                 )}
             </div>
 
-            {/* TOP RIGHT: Removed Image, Added Minimal Decorative corner */}
-            <div className="absolute top-10 right-10 opacity-30">
-                <div className="w-20 h-20 border-t-2 border-r-2 border-amber-100/50 rounded-tr-3xl"></div>
-            </div>
-
-            {/* BORDERS around content */}
-            <div className="absolute top-8 left-8 w-[calc(100%-64px)] h-[calc(100%-64px)] border border-amber-500/10 rounded-[3rem] pointer-events-none"></div>
-
             {/* MAIN CONTENT AREA */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-16 mt-20 mb-12">
+            <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-24 mt-20 mb-12">
 
-                {/* Visual Quote Mark */}
-                <span className="text-[160px] text-amber-500/20 font-serif leading-none select-none mb-4 self-start transform -translate-x-8 translate-y-8">
+                {/* Visual Quote Mark - Subtle */}
+                <span className="text-[140px] text-amber-500/15 font-serif leading-none select-none mb-6 self-start transform -translate-x-12 translate-y-8 font-normal">
                     “
                 </span>
 
                 <div className="relative w-full">
-                    <p className={`font-serif text-[#fefefe] leading-[1.7] tracking-wider drop-shadow-2xl text-center
-                        ${text.length < 150 ? 'text-[60px]' :
-                            text.length < 300 ? 'text-[50px]' :
-                                text.length < 500 ? 'text-[42px]' : 'text-[38px]'}
+                    <p className={`font-serif text-[#fdfdfd] leading-[1.8] tracking-wide drop-shadow-2xl text-center
+                        ${text.length < 150 ? 'text-[56px]' :
+                            text.length < 300 ? 'text-[46px]' :
+                                text.length < 500 ? 'text-[40px]' : 'text-[36px]'}
                     `} style={{
-                            textShadow: '0 4px 20px rgba(0,0,0,0.8)',
-                            fontVariantLigatures: 'common-ligatures'
+                            textShadow: '0 4px 12px rgba(0,0,0,0.7)',
                         }}>
                         {text}
                     </p>
                 </div>
 
                 {/* SIGNATURE */}
-                <div className="w-full flex justify-end mt-14 pr-8">
-                    <div className="flex flex-col items-end">
+                <div className="w-full flex justify-end mt-16 pr-8">
+                    <div className="flex flex-col items-end gap-2">
                         <span
-                            className="text-amber-400 font-serif italic text-[38px] tracking-wide"
+                            className="text-amber-400 font-serif italic text-[36px] tracking-wide"
                             style={{
-                                fontFamily: 'cursive', // Trying to look more like signature/handwriting style if font matches
-                                textShadow: '0 2px 10px rgba(0,0,0,0.9)'
+                                textShadow: '0 2px 10px rgba(0,0,0,0.8)'
                             }}
                         >
                             {author}
                         </span>
-                        <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-amber-500/60 to-transparent mt-2"></div>
+                        <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
                     </div>
                 </div>
             </div>
@@ -119,9 +121,9 @@ const QuoteCardTemplate = ({ text, source, author, theme, isExport = false }) =>
             {/* FOOTER */}
             <div className="flex flex-col items-center gap-6 z-10 w-full shrink-0 pb-16">
                 <div className="flex flex-col items-center opacity-80 scale-100">
-                    <span className="text-amber-100/50 text-[24px] font-serif italic mb-3 tracking-widest">...devamı ve daha fazlası</span>
-                    <div className="flex items-center gap-4 bg-black/20 px-6 py-3 rounded-full border border-white/5 backdrop-blur-sm shadow-xl">
-                        <span className="text-amber-50 text-[20px] font-mono tracking-[0.2em] font-light opacity-90">E-RISALE.GITHUB.IO</span>
+                    <span className="text-amber-100/50 text-[22px] font-serif italic mb-3 tracking-widest">...devamı ve daha fazlası</span>
+                    <div className="flex items-center gap-4 bg-white/5 px-8 py-3 rounded-full border border-white/10 backdrop-blur-sm shadow-xl">
+                        <span className="text-amber-50 text-[18px] font-mono tracking-[0.25em] font-light opacity-90">E-RISALE.GITHUB.IO</span>
                     </div>
                 </div>
             </div>
