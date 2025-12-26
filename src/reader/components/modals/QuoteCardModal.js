@@ -10,7 +10,7 @@ const THEMES = [
     { id: 'amber', name: 'Altın', from: '#b45309', via: '#d97706', to: '#78350f', label: 'Altın' }
 ];
 
-const ORNAMENTS = [
+const TOP_ORNAMENTS = [
     { id: 'none', src: null, label: 'Yok' },
     { id: 'sus1', src: '/sus1.png', label: 'Motif 1' },
     { id: 'sus2', src: '/sus2.png', label: 'Motif 2' },
@@ -19,8 +19,18 @@ const ORNAMENTS = [
     { id: 'sus5', src: '/sus5.png', label: 'Motif 5' },
 ];
 
+const BOTTOM_ORNAMENTS = [
+    { id: 'none', src: null, label: 'Yok' },
+    { id: 'alt1', src: '/alt1.png', label: 'Alt 1' },
+    { id: 'alt2', src: '/alt2.png', label: 'Alt 2' },
+    { id: 'alt3', src: '/alt3.png', label: 'Alt 3' },
+    { id: 'alt4', src: '/alt4.png', label: 'Alt 4' },
+    { id: 'alt5', src: '/alt5.png', label: 'Alt 5' },
+    { id: 'alt6', src: '/alt6.png', label: 'Alt 6' },
+];
+
 // Sub-component for the card content to ensure identical rendering
-const QuoteCardTemplate = ({ text, source, author, theme, ornament, isExport = false }) => {
+const QuoteCardTemplate = ({ text, source, author, theme, topOrnament, bottomOrnament, isExport = false }) => {
     return (
         <div
             className="w-full h-full relative flex flex-col justify-between p-[80px] overflow-hidden"
@@ -40,13 +50,25 @@ const QuoteCardTemplate = ({ text, source, author, theme, ornament, isExport = f
                 style={{ background: 'radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.5) 100%)' }}>
             </div>
 
-            {/* SELECTED ORNAMENT (TOP HEADER - FULL WIDTH) */}
-            {ornament && ornament.src && (
-                <div className="absolute top-0 left-0 w-full h-[400px] pointer-events-none z-0">
+            {/* TOP ORNAMENT (HEADER) */}
+            {topOrnament && topOrnament.src && (
+                <div className="absolute top-0 left-0 w-full h-[350px] pointer-events-none z-0">
                     <img
-                        src={ornament.src}
-                        alt="motif"
-                        className="w-full h-full object-contain object-top opacity-90 drop-shadow-xl"
+                        src={topOrnament.src}
+                        alt="top-motif"
+                        className="w-full h-full object-contain object-top opacity-15 drop-shadow-xl"
+                        style={{ filter: 'brightness(1.2) sepia(0.3)' }}
+                    />
+                </div>
+            )}
+
+            {/* BOTTOM ORNAMENT (FOOTER DECORATION) */}
+            {bottomOrnament && bottomOrnament.src && (
+                <div className="absolute bottom-0 left-0 w-full h-[350px] pointer-events-none z-0">
+                    <img
+                        src={bottomOrnament.src}
+                        alt="bottom-motif"
+                        className="w-full h-full object-contain object-bottom opacity-15 drop-shadow-xl"
                         style={{ filter: 'brightness(1.2) sepia(0.3)' }}
                     />
                 </div>
@@ -55,12 +77,6 @@ const QuoteCardTemplate = ({ text, source, author, theme, ornament, isExport = f
             {/* 3. ELEGANT BORDER */}
             <div className="absolute top-6 left-6 right-6 bottom-6 border-2 border-amber-200/20 rounded-[1rem] pointer-events-none z-20"></div>
             <div className="absolute top-9 left-9 right-9 bottom-9 border border-amber-100/30 rounded-[0.5rem] pointer-events-none z-20">
-            </div>
-
-            {/* 4. BOTTOM HORIZON (Subtle Landscape) */}
-            <div className="absolute bottom-0 left-0 w-full h-[250px] pointer-events-none z-0 opacity-30">
-                <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-[-40px] left-[-10%] w-[120%] h-[150px] rounded-[100%] bg-black/40 blur-2xl"></div>
             </div>
 
             {/* TOP LEFT: Book & Chapter Info */}
@@ -131,8 +147,12 @@ const QuoteCardTemplate = ({ text, source, author, theme, ornament, isExport = f
 const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman Said Nursi" }) => {
     const exportRef = useRef(null); // Ref for the hidden export element
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // States
     const [selectedTheme, setSelectedTheme] = useState(THEMES[0]);
-    const [selectedOrnament, setSelectedOrnament] = useState(ORNAMENTS[2]); // Default to Motif 2/3 maybe? Or 2.
+    const [selectedTopOrnament, setSelectedTopOrnament] = useState(TOP_ORNAMENTS[2]);
+    const [selectedBottomOrnament, setSelectedBottomOrnament] = useState(BOTTOM_ORNAMENTS[0]);
+
     const { showToast } = useToast();
 
     // Ensure text is safe
@@ -145,8 +165,18 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
         const calculateScale = () => {
             const cardW = 1080;
             const cardH = 1350;
-            const availableH = window.innerHeight * 0.70; // Slightly reduced to fit controls
-            const availableW = Math.min(window.innerWidth * 0.95, 480);
+            const isDesktop = window.innerWidth >= 768;
+
+            let availableH, availableW;
+
+            if (isDesktop) {
+                availableH = window.innerHeight * 0.85;
+                // Reserve space for sidebar (300px)
+                availableW = Math.min(window.innerWidth - 350, 600);
+            } else {
+                availableH = window.innerHeight * 0.60;
+                availableW = Math.min(window.innerWidth * 0.95, 480);
+            }
 
             const hScale = availableH / cardH;
             const wScale = availableW / cardW;
@@ -199,42 +229,129 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
     };
 
     return (
-        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-start md:justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200 overflow-y-auto" onClick={onClose}>
 
-            {/* Top Bar */}
-            <div className="w-full max-w-md flex justify-between items-center text-white mb-2 px-2" onClick={e => e.stopPropagation()}>
-                <h3 className="text-xl font-bold flex items-center gap-2">📷 Önizleme</h3>
-                <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-xl">✕</button>
+            {/* TOP HEADER (Mobile Close Button) */}
+            <div className="absolute top-4 right-4 z-[130] md:hidden">
+                <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-xl text-white">✕</button>
             </div>
 
-            {/* PREVIEW CONTAINER (Scaled for View) */}
-            <div
-                className="relative flex items-center justify-center shadow-2xl rounded-2xl ring-1 ring-white/10 bg-[#1a1a1a] touch-none mb-4"
-                style={{
-                    width: `${1080 * scaleFactor}px`,
-                    height: `${1350 * scaleFactor}px`,
-                }}
-                onClick={e => e.stopPropagation()}
-            >
-                <div style={{
-                    width: '1080px',
-                    height: '1350px',
-                    transform: `scale(${scaleFactor})`,
-                    transformOrigin: 'top left',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    overflow: 'hidden',
-                    borderRadius: '0px'
-                }}>
-                    {/* RENDER TEMPLATE FOR PREVIEW */}
-                    <QuoteCardTemplate
-                        text={safeText}
-                        source={source}
-                        author={author}
-                        theme={selectedTheme}
-                        ornament={selectedOrnament}
-                    />
+            {/* MAIN LAYOUT WRAPPER */}
+            <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-center gap-8 h-full md:h-auto" onClick={e => e.stopPropagation()}>
+
+                {/* 1. PREVIEW SIDE (Left/Center) */}
+                <div className="flex-col items-center justify-center relative flex-shrink-0">
+                    <div className="hidden md:flex w-full justify-between items-center text-white mb-4">
+                        <h3 className="text-xl font-bold flex items-center gap-2">📷 Önizleme</h3>
+                    </div>
+
+                    {/* PREVIEW CONTAINER */}
+                    <div
+                        className="relative flex items-center justify-center shadow-2xl rounded-2xl ring-1 ring-white/10 bg-[#1a1a1a] touch-none"
+                        style={{
+                            width: `${1080 * scaleFactor}px`,
+                            height: `${1350 * scaleFactor}px`,
+                        }}
+                    >
+                        <div style={{
+                            width: '1080px',
+                            height: '1350px',
+                            transform: `scale(${scaleFactor})`,
+                            transformOrigin: 'top left',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            overflow: 'hidden',
+                            borderRadius: '0px'
+                        }}>
+                            <QuoteCardTemplate
+                                text={safeText}
+                                source={source}
+                                author={author}
+                                theme={selectedTheme}
+                                topOrnament={selectedTopOrnament}
+                                bottomOrnament={selectedBottomOrnament}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. CONTROLS SIDEBAR (Right on Desktop, Bottom on Mobile) */}
+                <div className="w-full max-w-md md:w-[320px] flex flex-col gap-5 z-[120] bg-zinc-900/50 p-6 rounded-2xl border border-white/5 backdrop-blur-xl md:h-[80vh] md:overflow-y-auto md:justify-center">
+
+                    <div className="flex justify-between items-center text-white md:hidden">
+                        <h3 className="font-bold">Ayarlar</h3>
+                    </div>
+
+                    <div className="hidden md:flex justify-between items-center text-white mb-2">
+                        <h3 className="font-bold text-xl">Ayarlar</h3>
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-sm">✕</button>
+                    </div>
+
+                    {/* Controls Group */}
+                    <div className="space-y-6">
+                        {/* Theme Selector */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Renk Teması</label>
+                            <div className="flex flex-wrap gap-2 p-1">
+                                {THEMES.map((theme) => (
+                                    <button
+                                        key={theme.id}
+                                        onClick={() => setSelectedTheme(theme)}
+                                        className={`w-10 h-10 rounded-full transition-all relative shrink-0 ${selectedTheme.id === theme.id ? 'scale-110 ring-2 ring-white shadow-lg' : 'opacity-70 hover:opacity-100'}`}
+                                    >
+                                        <div className="absolute inset-0 rounded-full" style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.via})` }}></div>
+                                        {selectedTheme.id === theme.id && <span className="absolute inset-0 flex items-center justify-center text-white text-xs">✓</span>}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Top Ornament Selector */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Üst Motif</label>
+                            <div className="flex flex-wrap gap-2 p-1">
+                                {TOP_ORNAMENTS.map((ornament) => (
+                                    <button
+                                        key={ornament.id}
+                                        onClick={() => setSelectedTopOrnament(ornament)}
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all relative shrink-0 border ${selectedTopOrnament.id === ornament.id ? 'bg-amber-500 text-black border-amber-400 font-bold' : 'bg-white/10 text-white/70 border-transparent hover:bg-white/20'}`}
+                                    >
+                                        <span className="text-xs">
+                                            {ornament.id === 'none' ? 'Ø' : ornament.id.replace('sus', '')}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Bottom Ornament Selector */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Alt Motif</label>
+                            <div className="flex flex-wrap gap-2 p-1">
+                                {BOTTOM_ORNAMENTS.map((ornament) => (
+                                    <button
+                                        key={ornament.id}
+                                        onClick={() => setSelectedBottomOrnament(ornament)}
+                                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all relative shrink-0 border ${selectedBottomOrnament.id === ornament.id ? 'bg-amber-500 text-black border-amber-400 font-bold' : 'bg-white/10 text-white/70 border-transparent hover:bg-white/20'}`}
+                                    >
+                                        <span className="text-xs">
+                                            {ornament.id === 'none' ? 'Ø' : ornament.id.replace('alt', '')}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Download Btn */}
+                    <button
+                        onClick={handleDownload}
+                        disabled={isGenerating}
+                        className="w-full py-4 bg-white text-black hover:bg-amber-50 rounded-xl font-bold text-lg shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-auto"
+                    >
+                        {isGenerating ? 'Hazırlanıyor...' : 'İndir & Paylaş'}
+                    </button>
                 </div>
             </div>
 
@@ -247,52 +364,11 @@ const QuoteCardModal = ({ isOpen, onClose, text, source, author = "Bediüzzaman 
                         source={source}
                         author={author}
                         theme={selectedTheme}
-                        ornament={selectedOrnament}
+                        topOrnament={selectedTopOrnament}
+                        bottomOrnament={selectedBottomOrnament}
                         isExport={true}
                     />
                 </div>
-            </div>
-
-            {/* CONTROLS */}
-            <div className="w-full max-w-md flex flex-col gap-3 mt-auto z-[120] pb-4" onClick={e => e.stopPropagation()}>
-
-                {/* 1. Theme Selector */}
-                <div className="flex justify-center gap-3 p-2 bg-white/10 rounded-2xl backdrop-blur-md overflow-x-auto">
-                    {THEMES.map((theme) => (
-                        <button
-                            key={theme.id}
-                            onClick={() => setSelectedTheme(theme)}
-                            className={`w-10 h-10 rounded-full transition-all relative shrink-0 ${selectedTheme.id === theme.id ? 'scale-110 ring-2 ring-white shadow-lg' : 'opacity-70 hover:opacity-100'}`}
-                        >
-                            <div className="absolute inset-0 rounded-full" style={{ background: `linear-gradient(135deg, ${theme.from}, ${theme.via})` }}></div>
-                            {selectedTheme.id === theme.id && <span className="absolute inset-0 flex items-center justify-center text-white text-xs">✓</span>}
-                        </button>
-                    ))}
-                </div>
-
-                {/* 2. Ornament Selector (NUMBERS ONLY) */}
-                <div className="flex justify-center gap-2 p-2 bg-white/10 rounded-2xl backdrop-blur-md overflow-x-auto">
-                    {ORNAMENTS.map((ornament) => (
-                        <button
-                            key={ornament.id}
-                            onClick={() => setSelectedOrnament(ornament)}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative shrink-0 border ${selectedOrnament.id === ornament.id ? 'bg-white text-black border-white scale-110' : 'bg-black/40 text-white border-transparent hover:bg-black/60'}`}
-                        >
-                            <span className="text-sm font-bold">
-                                {ornament.id === 'none' ? 'Ø' : ornament.id.replace('sus', '')}
-                            </span>
-                        </button>
-                    ))}
-                </div>
-
-                {/* Download Btn */}
-                <button
-                    onClick={handleDownload}
-                    disabled={isGenerating}
-                    className="w-full py-3 bg-white text-black hover:bg-amber-50 rounded-xl font-bold text-lg shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                >
-                    {isGenerating ? 'Hazırlanıyor...' : 'İndir & Paylaş'}
-                </button>
             </div>
 
         </div>
