@@ -300,6 +300,7 @@ const Reader = React.forwardRef(({
                     setIsToolsMenuOpen={setIsToolsMenuOpen}
                     onSwitchMode={onSwitchMode}
                     darkMode={darkMode}
+                    toggleDarkMode={toggleDarkMode}
                     user={user}
                     onQuickBookmark={handleQuickBookmark}
                     onBack={onBack}
@@ -313,6 +314,8 @@ const Reader = React.forwardRef(({
                     onOpenFeedback={() => setIsFeedbackModalOpen(true)}
                     onLogout={logout}
                     onGoToAdmin={() => onSwitchMode('admin')}
+                    onOpenSearch={() => setIsSearchModalOpen(true)}
+                    onOpenBookmarks={() => setIsBookmarkModalOpen(true)}
                 />
             </div>
 

@@ -15,6 +15,7 @@ const ReaderHeader = ({
     isToolsMenuOpen,
     setIsToolsMenuOpen,
     darkMode,
+    toggleDarkMode, // Added
     user,
     onQuickBookmark,
     activeBookTitle,
@@ -27,7 +28,9 @@ const ReaderHeader = ({
     onOpenFeedback,
     onLogout,
     onGoToAdmin,
-    onSwitchMode
+    onSwitchMode,
+    onOpenSearch, // Added
+    onOpenBookmarks // Added
 }) => {
 
     const handleModeCycle = () => {
@@ -70,6 +73,8 @@ const ReaderHeader = ({
         if (mode === 'modern') return darkMode ? 'bg-purple-900/40 text-purple-200 border border-purple-800' : 'bg-purple-50 text-purple-900 border border-purple-200';
         return '';
     };
+
+    const menuItemClass = `w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`;
 
     return (
         <div className={`relative w-full z-30 transition-all duration-300 ${showControls ? '' : '-mt-16'}`} onClick={(e) => e.stopPropagation()}>
@@ -162,87 +167,91 @@ const ReaderHeader = ({
                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                     transition={{ duration: 0.1 }}
-                                    className={`absolute top-12 right-0 w-72 rounded-xl shadow-2xl border overflow-hidden origin-top-right z-50 ${darkMode ? 'bg-[#1a1b1e] border-gray-700' : 'bg-white border-amber-100'}`}
+                                    className={`absolute top-12 right-0 w-72 rounded-xl shadow-2xl border overflow-hidden origin-top-right z-50 ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-[#fffbf5] border-amber-100'}`}
                                 >
+                                    <div className="p-2 space-y-1">
+                                        {/* ARAMA */}
+                                        <button onClick={() => { onOpenSearch(); setIsToolsMenuOpen(false); }} className={menuItemClass}>
+                                            <span className="text-xl w-6 flex justify-center">🔍</span>
+                                            <span className="font-medium text-sm">Arama</span>
+                                        </button>
 
-                                    {/* FONT SETTINGS IN MENU */}
-                                    <div className={`p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800/30' : 'border-amber-50 bg-amber-50/30'}`}>
-                                        <div className="space-y-4">
-                                            {/* Font Family Carousel */}
-                                            <div className="flex items-center justify-between bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/10 p-1">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); cycleFont(-1); }}
-                                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-amber-100 text-amber-800'}`}
-                                                >
-                                                    ‹
-                                                </button>
-                                                <span
-                                                    className={`text-sm font-medium select-none truncate px-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
-                                                    style={{ fontFamily: `'${fontFamily}', serif` }}
-                                                >
-                                                    {fontFamily}
-                                                </span>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); cycleFont(1); }}
-                                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-amber-100 text-amber-800'}`}
-                                                >
-                                                    ›
-                                                </button>
-                                            </div>
+                                        {/* AYRAÇLAR */}
+                                        <button onClick={() => { onOpenBookmarks(); setIsToolsMenuOpen(false); }} className={menuItemClass}>
+                                            <span className="text-xl w-6 flex justify-center">🔖</span>
+                                            <span className="font-medium text-sm">Ayraçlar</span>
+                                        </button>
 
-                                            {/* Font Size */}
-                                            <div className="flex items-center justify-between gap-2">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); changeFontSize(-2); }}
-                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-white/10 text-gray-300' : 'border-amber-200 hover:bg-amber-50 text-amber-900'}`}
-                                                >
-                                                    A-
-                                                </button>
-                                                <span className={`text-sm font-bold font-serif w-8 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{fontSize}</span>
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); changeFontSize(2); }}
-                                                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-white/10 text-gray-300' : 'border-amber-200 hover:bg-amber-50 text-amber-900'}`}
-                                                >
-                                                    A+
-                                                </button>
+                                        {/* GECE MODU */}
+                                        <button onClick={() => { toggleDarkMode(); setIsToolsMenuOpen(false); }} className={menuItemClass}>
+                                            <span className="text-xl w-6 flex justify-center">{darkMode ? '☀️' : '🌙'}</span>
+                                            <span className="font-medium text-sm">{darkMode ? 'Gündüz Modu' : 'Gece Modu'}</span>
+                                        </button>
+
+                                        {/* FONT SETTINGS AREA (Replacing 'Diğer Ayarlar') */}
+                                        <div className={`mt-2 mb-2 pt-3 pb-2 px-2 border-t border-b ${darkMode ? 'border-gray-700 bg-black/10' : 'border-amber-100 bg-amber-50/50'}`}>
+                                            <div className="space-y-3">
+                                                {/* Font Family Carousel */}
+                                                <div className="flex items-center justify-between bg-black/5 dark:bg-white/5 rounded-lg border border-black/5 dark:border-white/10 p-1">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); cycleFont(-1); }}
+                                                        className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-amber-100 text-amber-800'}`}
+                                                    >
+                                                        ‹
+                                                    </button>
+                                                    <span
+                                                        className={`text-sm font-medium select-none truncate px-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+                                                        style={{ fontFamily: `'${fontFamily}', serif` }}
+                                                    >
+                                                        {fontFamily}
+                                                    </span>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); cycleFont(1); }}
+                                                        className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${darkMode ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-amber-100 text-amber-800'}`}
+                                                    >
+                                                        ›
+                                                    </button>
+                                                </div>
+
+                                                {/* Font Size */}
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); changeFontSize(-2); }}
+                                                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-white/10 text-gray-300' : 'bg-white border-amber-200 hover:bg-amber-50 text-amber-900 shadow-sm'}`}
+                                                    >
+                                                        A-
+                                                    </button>
+                                                    <span className={`text-sm font-bold font-serif w-8 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{fontSize}</span>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); changeFontSize(2); }}
+                                                        className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${darkMode ? 'border-gray-600 hover:bg-white/10 text-gray-300' : 'bg-white border-amber-200 hover:bg-amber-50 text-amber-900 shadow-sm'}`}
+                                                    >
+                                                        A+
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    {/* Normal Menu Items */}
-                                    <div className="p-2 space-y-1">
-                                        <button onClick={() => { onOpenQuoteModal(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
-                                            <span>📷</span>
-                                            <span className="font-medium text-sm">Söz Paylaş</span>
-                                        </button>
-
-                                        <button onClick={() => { onOpenFeedback(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
-                                            <span>💬</span>
-                                            <span className="font-medium text-sm">Geri Bildirim</span>
-                                        </button>
 
                                         {isAdmin && (
                                             <>
-                                                <div className={`my-2 border-t ${darkMode ? 'border-gray-700' : 'border-amber-100'}`}></div>
-                                                <button onClick={() => { onGoToAdmin(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
-                                                    <span>🔧</span>
-                                                    <span className="font-medium text-sm">Yönetici Paneli</span>
+                                                <button onClick={() => { onGoToAdmin(); setIsToolsMenuOpen(false); }} className={`${menuItemClass} ${darkMode ? 'text-amber-500' : 'text-amber-600'}`}>
+                                                    <span className="text-xl w-6 flex justify-center">🛡️</span>
+                                                    <span className="font-medium text-sm">Yönetim Paneli</span>
                                                 </button>
-                                                <button onClick={() => { onSwitchMode(); setIsToolsMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-gray-300' : 'hover:bg-amber-50 text-[#5c4033]'}`}>
-                                                    <span>📝</span>
+                                                <button onClick={() => { onSwitchMode(); setIsToolsMenuOpen(false); }} className={menuItemClass}>
+                                                    <span className="text-xl w-6 flex justify-center">📝</span>
                                                     <span className="font-medium text-sm">Editör Modu</span>
                                                 </button>
                                             </>
                                         )}
 
                                         {user && (
-                                            <button onClick={() => { onLogout(); setIsToolsMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-red-50 text-red-600 mt-1">
-                                                <span>🚪</span>
+                                            <button onClick={() => { onLogout(); setIsToolsMenuOpen(false); }} className={`${menuItemClass} text-red-500 hover:bg-red-50 hover:text-red-600`}>
+                                                <span className="text-xl w-6 flex justify-center">🚪</span>
                                                 <span className="font-medium text-sm">Çıkış Yap</span>
                                             </button>
                                         )}
                                     </div>
-
                                 </motion.div>
                             )}
                         </AnimatePresence>
