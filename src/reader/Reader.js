@@ -12,7 +12,7 @@ import { useFeedback } from './hooks/useFeedback';
 import ReaderHeader from './components/ReaderHeader';
 import ReaderSidebar from './components/ReaderSidebar';
 import ReaderContent from './components/ReaderContent';
-import ToolsMenu from './components/ToolsMenu';
+// import ToolsMenu from './components/ToolsMenu'; // REMOVED
 
 // Modals
 import SearchModal from './components/modals/SearchModal';
@@ -372,24 +372,7 @@ const Reader = React.forwardRef(({
                 </div>
             </div>
 
-            {/* TOOLS MENU & MODALS */}
-            <ToolsMenu
-                isOpen={isToolsMenuOpen}
-                onClose={() => setIsToolsMenuOpen(false)}
-                onOpenSearch={() => setIsSearchModalOpen(true)}
-                onOpenBookmarks={() => setIsBookmarkModalOpen(true)}
-                onQuickBookmark={handleQuickBookmark}
-                onOpenSettings={() => { /* Removed */ }}
-                onOpenAdmin={() => onSwitchMode('admin')}
-                isAdmin={isAdmin}
-                unreadCount={unreadCount}
-                bookmarksCount={bookmarks.length}
-                darkMode={darkMode}
-                toggleDarkMode={toggleDarkMode}
-                user={user}
-                onLogin={loginWithGoogle}
-                onLogout={logout}
-            />
+            {/* TOOLS MENU REMOVED - Integrated into Header */}
 
             <SearchModal
                 isOpen={isSearchModalOpen}

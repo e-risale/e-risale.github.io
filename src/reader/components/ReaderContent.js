@@ -56,7 +56,7 @@ const TooltipToken = ({ p1, p2, p3, isModernMode, darkMode, highlightText, activ
 
     const wordStyle = {
         fontFamily: isWordArabic ? "'Noto Naskh Arabic', serif" : `'${fontFamily}', serif`,
-        fontSize: isWordArabic ? `${fontSize * 1.25 * scale}px` : `${fontSize * scale}px`
+        fontSize: isWordArabic ? `${fontSize * 1.30 * scale}px` : `${fontSize * scale}px`
     };
 
     const textColor = isModernMode
