@@ -26,9 +26,10 @@ const FeedbackModal = ({
 
                 // On mobile, scroll the viewport to ensure the modal is at the top
                 if (window.innerWidth < 768) {
-                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // 'start' tries to put the element at the top of the viewport
+                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-            }, 300);
+            }, 400);
         }
     }, [isOpen, user]);
 
@@ -36,7 +37,7 @@ const FeedbackModal = ({
 
     return (
         <div
-            className="fixed inset-0 z-[120] flex items-center md:items-center items-start justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in overflow-y-auto"
+            className="fixed inset-0 z-[120] flex items-center md:items-center items-start justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in overflow-y-auto pb-64"
             onClick={onClose}
         >
             <div
@@ -79,7 +80,7 @@ const FeedbackModal = ({
 
                         <div className="flex justify-end gap-2">
                             <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-bold opacity-60 hover:opacity-100">İptal</button>
-                            <button onClick={() => onSend(category, text)} disabled={isSending || !text.trim()} className={`px-6 py-2 rounded-lg text-sm font-bold text-white shadow-md ${darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-[#2c2e33] hover:bg-black'}`}>{isSending ? '...' : 'Gönder'}</button>
+                            <button onClick={() => onSend(category, text, null, null, null, selectedText)} disabled={isSending || !text.trim()} className={`px-6 py-2 rounded-lg text-sm font-bold text-white shadow-md ${darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-[#2c2e33] hover:bg-black'}`}>{isSending ? '...' : 'Gönder'}</button>
                         </div>
                     </>
                 )}
