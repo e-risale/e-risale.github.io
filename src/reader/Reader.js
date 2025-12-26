@@ -17,7 +17,7 @@ import ToolsMenu from './components/ToolsMenu';
 // Modals
 import SearchModal from './components/modals/SearchModal';
 // import BookmarkModal from './components/modals/BookmarkModal'; // App.js'e taşındı
-import SettingsModal from './components/modals/SettingsModal';
+// import SettingsModal from './components/modals/SettingsModal'; // REMOVED
 // import AdminPanel from './components/modals/AdminPanel'; // App.js'e taşındı (AdminPage)
 import FeedbackModal from './components/modals/FeedbackModal';
 import MobileTooltip from './components/modals/MobileTooltip';
