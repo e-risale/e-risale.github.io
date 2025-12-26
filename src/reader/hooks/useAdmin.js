@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot, getDocs, writeBatch, where, serverTimestamp } from 'firebase/firestore';
 
-export const adminEmails = ["turan1971@gmail.com", "turan1971r1@gmail.com"]; // Admin email listesi - Shared constant
+export const adminEmails = ["kolay.risale@gmail.com", "turan1971@gmail.com"]; // Admin email listesi - Shared constant
 
 export const useAdmin = (showToast) => {
     const [isAdmin, setIsAdmin] = useState(false);
