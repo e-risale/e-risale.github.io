@@ -1,8 +1,11 @@
 // src/config.js
 
-// --- AYARLAR ---
+// --- MESAJ AYARLARI---
 export const CONFIG = {
   BATCH_SIZE: 5, // Vagon Sayısı (Buradan değiştirebilirsiniz)
+  MESSAGE_LIMIT_PER_CHAPTER: 10,
+  REPLY_LIMIT_PER_CHAPTER: 50,
+  BAD_WORDS: ["amına", "mamına", "korum", "koduğumun", "küfür", "argo", "aptal", "salak", "gerizekalı", "mal", "dangalak", "ahmak", "kafasız", "öküz", "yavşak", "piç", "göt", "amk", "aq", "siktir", "sikerim", "yarrak", "oç", "kahpe", "fahişe"] // Genişletilebilir liste
 };
 
 // --- READER CONFIG ---
@@ -86,10 +89,11 @@ const COMMON_RULES = `
 -Günümüz Türkçesinde çok yaygın ve basit olan kelimeleri ETİKETLEME.
 -Örnek: ağaç, yıldız, dünya, güneş, kitap, kalem, gece, kış, soğuk, su, toprak vb.
 
-9.EKLER VE İMLA (KIRMIZI ÇİZGİ):
+9.EKLER, İMLA VE BÜYÜK/KÜÇÜK HARF UYUMU (KIRMIZI ÇİZGİ):
 -Kelimenin çekim veya yapım eklerine ASLA dokunma.
 -Orijinal kelime hangi ekle geldiyse aynen korunacak.
 -Harf ekleme, silme veya düzeltme KESİNLİKLE YAPMA.
+- Orijinal kelime BÜYÜK HARFLE başlıyorsa, yazdığın anlamın da ilk harfini mutlaka BÜYÜK yap. (Örnek: "Huruf" ise karşılığı "Harfler" olmalı; "harfler" değil.)
 
 10.PARANTEZLER VE NOTLAR:
 -Parantez içleri, hâşiyeler ve köşeli parantezler ASLA silinmeyecek.

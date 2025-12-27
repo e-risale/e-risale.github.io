@@ -12,7 +12,7 @@ import { GlobalSearchModal, WordPopup } from './components/EditorModals';
 import { useEditorState } from './hooks/useEditorState';
 // import { scanBookStatuses } from './utils/statusScanner'; // REMOVED
 
-const Editor = ({ onSwitchMode, user }) => {
+const Editor = ({ onSwitchMode, user, darkMode, toggleDarkMode }) => {
     // --- STATE & LOGIC (HOOK) ---
     const {
         globalLibrary, setGlobalLibrary,
@@ -35,7 +35,7 @@ const Editor = ({ onSwitchMode, user }) => {
     } = useEditorState(library);
 
     // --- LOCAL UI STATE ---
-    const [darkMode, setDarkMode] = useState(true);
+    // const [darkMode, setDarkMode] = useState(true); // Now via props
     const [fontSize, setFontSize] = useState(18);
     const [isFormatMode, setIsFormatMode] = useState(false);
     const [showGlobalSearch, setShowGlobalSearch] = useState(false);
@@ -123,7 +123,7 @@ const Editor = ({ onSwitchMode, user }) => {
 
     // --- İLK YÜKLEMELER ---
     useEffect(() => {
-        if (localStorage.getItem('risaleTheme') === 'dark') setDarkMode(true);
+        // if (localStorage.getItem('risaleTheme') === 'dark') setDarkMode(true); // Handled by App.js
         loadDictionaryData();
     }, []);
 
@@ -153,7 +153,7 @@ const Editor = ({ onSwitchMode, user }) => {
         localStorage.setItem('risaleDictionary', JSON.stringify(sorted));
     };
 
-    const toggleDarkMode = () => { const newMode = !darkMode; setDarkMode(newMode); localStorage.setItem('risaleTheme', newMode ? 'dark' : 'light'); };
+    // const toggleDarkMode = ... // Handled by App.js
 
     useEffect(() => {
         const timer = setTimeout(() => {

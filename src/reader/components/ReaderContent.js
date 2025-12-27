@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { Virtuoso } from 'react-virtuoso';
+import ReaderComments from './ReaderComments';
 import { formatLastUpdated } from '../utils/readerUtils';
 import { READER_CONFIG } from '../../config';
 
@@ -46,7 +47,7 @@ const TooltipToken = ({ p1, p2, p3, isModernMode, darkMode, highlightText, activ
         const selectionRect = {
             top: rect.top + window.scrollY - 50,
             left: rect.left + (rect.width / 2) - 80,
-            text: p1
+            text: `[[${p1}|${p2}${p3 ? '|' + p3 : ''}]]`
         };
         onEditClick(selectionRect);
     };
@@ -372,13 +373,11 @@ const ReaderContent = forwardRef(({
     onLikeComment,
     scrollTarget,
     onDebugUpdate, // New Prop for debugging
-    onScrollPos // New prop for scroll tracking
+    onScrollPos, // New prop for scroll tracking
+    isAdmin // Passed from parent
 }, ref) => {
 
     const activeTooltipCloseRef = useRef(null);
-    const [replyToComment, setReplyToComment] = useState(null);
-    const [expandedThreads, setExpandedThreads] = useState({});
-    const commentFormRef = useRef(null);
     const virtuosoRef = useRef(null);
 
     // --- IMPERATIVE HANDLE FOR BOOKMARKS ---
@@ -733,102 +732,11 @@ const ReaderContent = forwardRef(({
     };
 
     // --- FOOTER COMPONENT for Virtuoso ---
-    const ListFooter = () => (
-        <div className="max-w-4xl w-full mx-auto px-4 md:px-8 mt-12 flex flex-col gap-8 pb-40">
-            {lastUpdate && (
-                <div className={`text-xs font-mono opacity-50 pl-2 border-l-2 ${darkMode ? 'border-gray-700 text-gray-500' : 'border-amber-200 text-[#8c7b70]'}`}>
-                    {formatLastUpdated(lastUpdate)}
-                </div>
-            )}
-
-            {/* COMMENT & FEEDBACK SECTION */}
-            {/* (Existing Code for Feedback Form and Comments Rendered Here) */}
-            <div ref={commentFormRef} className={`w-full rounded-2xl border p-6 shadow-sm transition-all ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-[#e6e0d2]'}`}>
-                {/* ... Simplified for brevity, need to copy full logic or use component ... */}
-                <div className="flex items-center gap-2 mb-4">
-                    <span className="text-xl">✍️</span>
-                    <h3 className={`font-bold ${darkMode ? 'text-gray-200' : 'text-[#5c4033]'}`}>Katkıda Bulun</h3>
-                </div>
-
-                {replyToComment && (
-                    <div className={`mb-4 p-3 rounded-lg border-l-4 flex justify-between items-center ${darkMode ? 'bg-amber-900/20 border-amber-500' : 'bg-amber-50 border-amber-400'}`}>
-                        <div className="text-sm">
-                            <span className="font-bold">{replyToComment.name}</span> kişisine yanıt veriyorsunuz
-                        </div>
-                        <button onClick={() => setReplyToComment(null)} className="text-xs font-bold hover:underline opacity-60">İptal</button>
-                    </div>
-                )}
-
-                {user ? (
-                    <div className="space-y-4 animate-in fade-in">
-                        <div className="flex gap-4 mb-2">
-                            <button onClick={() => { setFeedbackCategory('general'); setFeedbackText(""); }} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all border ${feedbackCategory === 'general' ? (darkMode ? 'bg-amber-900/30 text-amber-300 border-amber-500' : 'bg-amber-50 text-amber-800 border-amber-400 shadow-sm') : (darkMode ? 'bg-gray-800 text-gray-500 border-gray-700' : 'bg-white text-gray-400 border-gray-200')}`}>Genel Görüş</button>
-                            <button onClick={() => { setFeedbackCategory('bug'); setFeedbackText(""); }} className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all border ${feedbackCategory === 'bug' ? (darkMode ? 'bg-amber-900/30 text-amber-300 border-amber-500' : 'bg-amber-50 text-amber-800 border-amber-400 shadow-sm') : (darkMode ? 'bg-gray-800 text-gray-500 border-gray-700' : 'bg-white text-gray-400 border-gray-200')}`}>Teknik Sorun</button>
-                        </div>
-                        <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} maxLength={feedbackCategory === 'general' ? 1000 : 500} placeholder={feedbackCategory === 'general' ? "Düşüncelerinizi paylaşın..." : "Karşılaştığınız teknik sorunu detaylandırın..."} className={`w-full p-4 rounded-xl min-h-[120px] outline-none border resize-y ${darkMode ? 'bg-gray-800 border-gray-600 text-gray-200' : 'bg-[#fffcf5] border-[#e6e0d2] text-[#5c4033]'}`}></textarea>
-                        <div className="flex justify-end">
-                            <button onClick={() => { onSendFeedback(feedbackCategory, feedbackText, null, null, null, null, replyToComment ? replyToComment.id : null); setReplyToComment(null); }} disabled={isSendingFeedback || !feedbackText.trim()} className={`px-6 py-2 rounded-lg text-sm font-bold text-white shadow-md transition-all ${isSendingFeedback || !feedbackText.trim() ? 'opacity-50 cursor-not-allowed bg-gray-400' : (darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-[#5c4033] hover:bg-[#4a332a]')}`}>{isSendingFeedback ? 'Gönderiliyor...' : 'Gönder'}</button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className={`p-8 rounded-xl border border-dashed flex flex-col items-center text-center gap-3 ${darkMode ? 'bg-gray-800/30 border-gray-700' : 'bg-[#fffcf5] border-[#e6e0d2]'}`}>
-                        <p className={`text-sm max-w-md ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Geri bildirimde bulunmak için lütfen Google hesabınızla oturum açın.</p>
-                        <button onClick={onLogin} className="px-6 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2">Google ile Giriş Yap</button>
-                    </div>
-                )}
-            </div>
-
-            <div className="flex flex-col gap-6">
-                <h3 className={`text-xl font-bold flex items-center gap-2 ${darkMode ? 'text-gray-300' : 'text-[#5c4033]'}`}><span>💬</span> Yorumlar <span className="text-sm opacity-50 font-normal">({chapterComments ? chapterComments.length : 0})</span></h3>
-                {chapterComments && chapterComments.length > 0 ? (
-                    <div className="space-y-4">
-                        {chapterComments.filter(c => !c.parentId).map((comment) => {
-                            const isLiked = user && comment.likes && comment.likes.includes(user.uid);
-                            const replies = chapterComments.filter(c => c.parentId === comment.id).sort((a, b) => (b.date?.toMillis ? b.date.toMillis() : 0) - (a.date?.toMillis ? a.date.toMillis() : 0));
-                            const isExpanded = expandedThreads[comment.id];
-                            const displayedReplies = isExpanded ? replies : replies.slice(0, 2);
-
-                            return (
-                                <div key={comment.id} className={`p-5 rounded-2xl border transition-all ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-[#e6e0d2]'}`}>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-amber-100 text-amber-600'}`}>{comment.name ? comment.name.charAt(0).toUpperCase() : '👤'}</div>
-                                        <div><div className={`font-bold text-sm ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{comment.name || 'Misafir'}</div></div>
-                                    </div>
-                                    {comment.selectedText && <div className={`mb-3 pl-3 py-2 text-sm italic border-l-4 rounded-r-lg ${darkMode ? 'border-amber-700 bg-amber-900/10 text-gray-400' : 'border-amber-300 bg-amber-50 text-gray-600'}`}>"{comment.selectedText}"</div>}
-                                    <div className={`text-base leading-relaxed whitespace-pre-wrap mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}>{comment.feedback}</div>
-                                    <div className="flex items-center justify-between border-t border-dashed border-gray-500/20 pt-3">
-                                        <button onClick={() => { setReplyToComment(comment); if (commentFormRef.current) commentFormRef.current.scrollIntoView({ behavior: 'smooth' }); setFeedbackText(`@${comment.name} `); }} className="text-xs font-bold uppercase tracking-wider hover:underline opacity-60">Yanıtla</button>
-                                        <div className="flex items-center gap-3">
-                                            <button onClick={() => onLikeComment(comment.id, comment.likes)} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold transition-all ${isLiked ? 'bg-pink-100 text-pink-600 scale-105' : 'hover:bg-gray-100 text-gray-500'}`}><span>👍</span> {comment.likes ? comment.likes.length : 0}</button>
-                                        </div>
-                                    </div>
-                                    {replies.length > 0 && (
-                                        <div className={`mt-4 pl-4 border-l-2 ${darkMode ? 'border-gray-700' : 'border-amber-100'}`}>
-                                            {displayedReplies.map(reply => (
-                                                <div key={reply.id} className={`p-4 rounded-xl mt-2 ${darkMode ? 'bg-[#1a1b1e]' : 'bg-gray-50'}`}>
-                                                    <div className="flex justify-between items-start mb-2"><span className="font-bold text-xs">{reply.name}</span></div>
-                                                    <div className="text-sm opacity-80">{reply.feedback}</div>
-                                                </div>
-                                            ))}
-                                            {replies.length > displayedReplies.length && (
-                                                <button onClick={() => setExpandedThreads(p => ({ ...p, [comment.id]: true }))} className="mt-3 text-xs font-bold hover:underline">devamını gör...</button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : <div className="text-center py-8 opacity-60"><p>Henüz yorum yok.</p></div>}
-            </div>
-
-            <div className="py-6 border-t border-dashed border-gray-300/50 flex justify-center">
-                <button onClick={onNextChapter} className={`px-8 py-4 rounded-full font-bold shadow-lg transition-transform hover:-translate-y-1 active:scale-95 text-lg flex items-center gap-3 ${darkMode ? 'bg-rose-900 text-rose-100' : 'bg-white text-rose-900 border border-rose-100'}`}>
-                    Sonraki Bölüme Geç &rarr;
-                </button>
-            </div>
-        </div>
-    );
+    // Defined once with stable identity. Context is passed by Virtuoso.
+    const virtuosoComponents = useMemo(() => ({
+        Header: () => <div className="h-12 w-full"></div>,
+        Footer: ({ context }) => <ReaderComments {...context} isAdmin={isAdmin} />
+    }), []);
 
 
 
@@ -892,6 +800,12 @@ const ReaderContent = forwardRef(({
         }
     };
 
+    const virtuosoContext = {
+        lastUpdate, chapterComments, darkMode, user, onLogin, onSendFeedback,
+        feedbackText, setFeedbackText, feedbackCategory, setFeedbackCategory,
+        isSendingFeedback, onLikeComment, onNextChapter
+    };
+
     return (
         <div
             className={`flex-1 h-full w-full transition-all duration-300 ${sidebarOpen ? 'md:pl-72' : 'pl-0'}`}
@@ -908,7 +822,8 @@ const ReaderContent = forwardRef(({
                         handleScroll();
                         if (onScrollPos) onScrollPos(e.target.scrollTop);
                     }}
-                    components={{ Footer: ListFooter, Header: () => <div className="h-12 w-full"></div> }}
+                    context={virtuosoContext}
+                    components={virtuosoComponents}
                     itemContent={(index, chunk) => (
                         <ChunkItem
                             chunk={chunk}

@@ -84,8 +84,8 @@ export const EditorToolbar = ({
                     <button onClick={onAutoTag} className={`h-8 px-3 rounded flex items-center gap-2 font-medium transition-colors ${theme.btn}`} title="Otomatik İşaretle">
                         <span className="text-amber-500">⚡</span> <span className="hidden lg:inline">Tara</span>
                     </button>
-                    <IconButton onClick={onToggleDarkMode} theme={theme} title="Gece/Gündüz Modu">
-                        {darkMode ? '🌙' : '☀️'}
+                    <IconButton onClick={onToggleDarkMode} theme={theme} title={darkMode ? "Aydınlık Moda Geç" : "Karanlık Moda Geç"}>
+                        {darkMode ? '☀️' : '🌙'}
                     </IconButton>
                 </div>
 

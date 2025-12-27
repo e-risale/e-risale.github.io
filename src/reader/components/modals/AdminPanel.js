@@ -51,6 +51,11 @@ const AdminPanel = ({
                                         <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded mr-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>{CATEGORY_LABELS[fb.category] || fb.category || "GENEL"}</span>
                                         <span className="text-xs opacity-60 font-mono">{fb.page}</span>
                                     </div>
+                                    {fb.selectedText && (
+                                        <div className={`mb-3 pl-3 py-2 text-sm italic border-l-4 rounded-r-lg ${darkMode ? 'border-amber-700 bg-amber-900/10 text-gray-400' : 'border-amber-300 bg-amber-50 text-gray-600'}`}>
+                                            "{fb.selectedText}"
+                                        </div>
+                                    )}
                                     <p className={`text-sm p-3 rounded-lg mb-3 ${darkMode ? 'bg-gray-900/50' : 'bg-gray-50'}`}>{fb.feedback}</p>
                                     <div className="flex justify-end gap-2">
                                         {fb.status !== 'read' && (<button onClick={() => onMarkRead(fb.id)} className="text-xs px-3 py-1.5 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold">Okundu İşaretle</button>)}

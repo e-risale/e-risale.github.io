@@ -132,8 +132,8 @@ export const useAdmin = (showToast) => {
             return;
         }
 
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "ID,Tarih,Kategori,Durum,Kullanici,Email,Sayfa,Mesaj,Begeniler\n";
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        csvContent += "ID,Tarih,Kategori,Klasor,Durum,Kullanici,Email,Sayfa,Secilen_Metin,Mesaj,Begeniler\n";
 
         adminFeedbacks.forEach(fb => {
             const dateStr = fb.date?.toDate ? fb.date.toDate().toLocaleDateString('tr-TR') : "";
@@ -141,11 +141,13 @@ export const useAdmin = (showToast) => {
                 fb.id,
                 dateStr,
                 fb.category,
+                fb.status === 'approved' ? 'Yayında' : fb.status === 'archived' ? 'Arşiv' : fb.status === 'read' ? 'İncelendi' : 'Yeni',
                 fb.status,
                 `"${fb.name || ''}"`,
                 fb.email,
                 `"${fb.page || ''}"`,
-                `"${(fb.feedback || '').replace(/"/g, '""')}"`,
+                `"${(fb.selectedText || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+                `"${(fb.feedback || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`,
                 fb.likes ? fb.likes.length : 0
             ].join(",");
             csvContent += row + "\n";
@@ -173,6 +175,25 @@ export const useAdmin = (showToast) => {
         }
     };
 
+    const updateCategory = async (id, newCategory) => {
+        try {
+            const feedbackRef = doc(db, 'comments', id); // Use 'comments' collection
+            await updateDoc(feedbackRef, {
+                category: newCategory
+            });
+
+            // Optimistically update the local state
+            setAdminFeedbacks(prev => prev.map(fb =>
+                fb.id === id ? { ...fb, category: newCategory } : fb
+            ));
+
+            if (showToast) showToast('Kategori güncellendi.', 'success'); // Use showToast
+        } catch (error) {
+            console.error('Error updating category:', error);
+            if (showToast) showToast('Kategori güncellenemedi.', 'error'); // Use showToast
+        }
+    };
+
     return {
         isAdmin,
         adminFeedbacks,
@@ -186,6 +207,8 @@ export const useAdmin = (showToast) => {
         handleArchive,
         handleDeleteArchived,
         handleReply,
-        handleExportExcel
+        handleExportExcel,
+        updateCategory
     };
 };
+

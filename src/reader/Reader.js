@@ -380,6 +380,7 @@ const Reader = React.forwardRef(({
                         onLikeComment={handleLikeComment}
                         onDebugUpdate={(info) => { /* console.log(info) */ }}
                         onScrollPos={setScrollY}
+                        isAdmin={isAdmin} // Pass admin status down
                     />
                 </div>
             </div>

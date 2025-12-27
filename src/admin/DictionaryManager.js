@@ -4,7 +4,7 @@ import defaultDictionary from '../sozluk.json';
 import { getDictionary, saveDictionary } from '../services/DataService';
 import { useToast } from '../reader/context/ToastContext';
 
-const DictionaryManager = ({ onBack, user }) => {
+const DictionaryManager = ({ onBack, user, darkMode, toggleDarkMode }) => {
     // Dictionary State
     const [dictionary, setDictionary] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
@@ -158,18 +158,21 @@ const DictionaryManager = ({ onBack, user }) => {
     const currentKeys = filteredKeys.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
+        <div className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'bg-[#1a1b1e] text-gray-200' : 'bg-gray-50 text-gray-800'}`}>
             {/* Header */}
-            <div className="fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-4 md:px-8 border-b bg-white border-gray-200">
+            <div className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className="flex items-center gap-3">
-                    <button onClick={onBack} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                    <button onClick={onBack} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}>
                         ←
                     </button>
-                    <h1 className="font-bold text-xl font-serif text-gray-800">Sözlük Yönetimi</h1>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500 font-mono">Top: {Object.keys(dictionary).length}</span>
+                    <h1 className={`font-bold text-xl font-serif ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Sözlük Yönetimi</h1>
+                    <span className={`text-xs px-2 py-1 rounded font-mono ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>Top: {Object.keys(dictionary).length}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={handleManualSave} className="px-4 py-2 rounded-lg text-sm font-bold bg-green-50 text-green-700 hover:bg-green-100 border border-green-200">
+                    <button onClick={toggleDarkMode} className={`p-2 rounded-lg text-xl transition-colors ${darkMode ? 'bg-gray-700 text-amber-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                        {darkMode ? '☀️' : '🌙'}
+                    </button>
+                    <button onClick={handleManualSave} className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${darkMode ? 'bg-green-900/20 text-green-400 border-green-800 hover:bg-green-900/40' : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200'}`}>
                         {window.api?.isElectron ? '💾 Dosyayı Kaydet' : '💾 İndir (JSON)'}
                     </button>
                     <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm">
@@ -179,13 +182,13 @@ const DictionaryManager = ({ onBack, user }) => {
             </div>
 
             {/* Toolbar */}
-            <div className="fixed top-16 left-0 right-0 z-20 bg-white border-b px-8 py-3 flex gap-4 shadow-sm">
+            <div className={`fixed top-16 left-0 right-0 z-20 border-b px-8 py-3 flex gap-4 shadow-sm transition-colors duration-300 ${darkMode ? 'bg-[#1a1b1e] border-gray-700' : 'bg-white'}`}>
                 <div className="relative flex-1 max-w-md">
                     <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
                     <input
                         type="text"
                         placeholder="Orjinal Kelime Ara..."
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-[#25262b] border-gray-600 text-white' : 'bg-gray-50 border-gray-300'}`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -203,7 +206,7 @@ const DictionaryManager = ({ onBack, user }) => {
                     <input
                         type="text"
                         placeholder="Kısa Anlam Ara..."
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                        className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-[#25262b] border-gray-600 text-white' : 'bg-gray-50 border-gray-300'}`}
                         value={shortSearchTerm}
                         onChange={(e) => setShortSearchTerm(e.target.value)}
                     />
@@ -220,9 +223,9 @@ const DictionaryManager = ({ onBack, user }) => {
 
             {/* List */}
             <div className="pt-32 pb-12 px-8 max-w-7xl mx-auto">
-                <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+                <div className={`rounded-xl shadow border overflow-hidden ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-gray-200'}`}>
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
+                        <thead className={`text-xs uppercase font-bold ${darkMode ? 'bg-[#1a1b1e] text-gray-400' : 'bg-gray-50 text-gray-500'}`}>
                             <tr>
                                 <th className="p-4 border-b w-16 text-center">KAYNAK</th>
                                 <th className="p-4 border-b w-1/4">Kelime</th>
@@ -231,7 +234,7 @@ const DictionaryManager = ({ onBack, user }) => {
                                 <th className="p-4 border-b text-right w-24">İşlem</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 text-sm">
+                        <tbody className={`divide-y text-sm ${darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
                             {currentKeys.map(key => {
                                 const entry = dictionary[key];
                                 if (!entry) return null;
@@ -239,24 +242,24 @@ const DictionaryManager = ({ onBack, user }) => {
                                 const src = entry.source || "AI";
 
                                 return (
-                                    <tr key={key} className="hover:bg-blue-50/50 transition-colors">
-                                        <td className="p-4 border-r border-gray-100 text-center font-mono text-xs text-gray-400 select-none">{src}</td>
+                                    <tr key={key} className={`transition-colors ${darkMode ? 'hover:bg-blue-900/10' : 'hover:bg-blue-50/50'}`}>
+                                        <td className={`p-4 border-r text-center font-mono text-xs select-none ${darkMode ? 'border-gray-700 text-gray-500' : 'border-gray-100 text-gray-400'}`}>{src}</td>
 
-                                        <td className="p-4 font-bold text-gray-900 border-r border-gray-100">{key}</td>
+                                        <td className={`p-4 font-bold border-r ${darkMode ? 'border-gray-700 text-gray-200' : 'border-gray-100 text-gray-900'}`}>{key}</td>
 
-                                        <td className="p-4 border-r border-gray-100">
+                                        <td className={`p-4 border-r ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                                             {isEditing ? (
-                                                <input className="w-full p-2 border rounded" value={editData.short} onChange={(e) => setEditData({ ...editData, short: e.target.value })} autoFocus />
+                                                <input className="w-full p-2 border rounded bg-white text-black" value={editData.short} onChange={(e) => setEditData({ ...editData, short: e.target.value })} autoFocus />
                                             ) : (
-                                                <span className="text-gray-700">{entry.short}</span>
+                                                <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>{entry.short}</span>
                                             )}
                                         </td>
 
-                                        <td className="p-4 border-r border-gray-100">
+                                        <td className={`p-4 border-r ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                                             {isEditing ? (
-                                                <textarea className="w-full p-2 border rounded" rows={2} value={editData.long} onChange={(e) => setEditData({ ...editData, long: e.target.value })} />
+                                                <textarea className="w-full p-2 border rounded bg-white text-black" rows={2} value={editData.long} onChange={(e) => setEditData({ ...editData, long: e.target.value })} />
                                             ) : (
-                                                <span className="text-gray-500 line-clamp-2">{entry.long}</span>
+                                                <span className={`line-clamp-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{entry.long}</span>
                                             )}
                                         </td>
 
@@ -268,8 +271,8 @@ const DictionaryManager = ({ onBack, user }) => {
                                                 </div>
                                             ) : (
                                                 <div className="flex justify-end gap-2">
-                                                    <button onClick={() => handleStartEdit(key)} className="text-blue-600 font-bold hover:underline">Düzenle</button>
-                                                    <button onClick={() => handleDelete(key)} className="text-red-600 hover:underline">Sil</button>
+                                                    <button onClick={() => handleStartEdit(key)} className="text-blue-500 font-bold hover:underline">Düzenle</button>
+                                                    <button onClick={() => handleDelete(key)} className="text-red-500 hover:underline">Sil</button>
                                                 </div>
                                             )}
                                         </td>

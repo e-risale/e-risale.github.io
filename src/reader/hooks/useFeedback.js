@@ -3,6 +3,7 @@ import { db, auth } from '../../firebase';
 import { collection, addDoc, serverTimestamp, query, where, onSnapshot, doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { library } from '../../data/library';
 import { adminEmails } from './useAdmin';
+import { CONFIG } from '../../config';
 
 export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
     // --- GÖNDERME STATE ---
@@ -49,8 +50,35 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
         return () => unsubscribe();
     }, [activeBookId, activeChapterIndex]);
 
+    // --- HELPER: CONTENT ANALYSIS ---
+    const SUSPICIOUS_PATTERN = /([a-zA-ZğüşıöçĞÜŞİÖÇ])[^a-zA-ZğüşıöçĞÜŞİÖÇ\s]{1,3}([a-zA-ZğüşıöçĞÜŞİÖÇ])/; // Matches letters separated by symbols (e.g. s.a.l.a.k, a*p*t*a*l)
+
+    const analyzeContent = (text) => {
+        const lowerText = text.toLowerCase();
+
+        // 1. Check for Hard Block (Profanity)
+        if (CONFIG.BAD_WORDS) {
+            // Tokenize text into words (handling Turkish chars and punctuation)
+            const words = lowerText.split(/[^a-z0-9ğüşıöç]+/);
+
+            for (const badWord of CONFIG.BAD_WORDS) {
+                if (words.includes(badWord)) {
+                    return { status: 'rejected', reason: 'profanity' };
+                }
+            }
+        }
+
+        // 2. Check for Suspicious Content (Symbol Obfuscation)
+        if (SUSPICIOUS_PATTERN.test(text)) {
+            return { status: 'pending', reason: 'suspicious' };
+        }
+
+        // 3. Clean
+        return { status: 'approved', reason: 'clean' };
+    };
+
     // --- FEEDBACK GÖNDERME ---
-    const sendFeedback = async (category, text, photoURL, _bookId, _chapterIndex, _selectedText, parentId = null) => {
+    const sendFeedback = async (category, text, photoURL, _bookId, _chapterIndex, _selectedText, parentId = null, postAsEditorInput = false) => {
         if (!text || !text.trim()) return;
 
         setIsSendingFeedback(true);
@@ -58,21 +86,45 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
             const currentUser = auth.currentUser;
             const isAdmin = currentUser && adminEmails.includes(currentUser.email);
 
-            // Günlük Limit Kontrolü (LocalStorage - Basit Koruma)
-            // Adminler bu limitten muaftır
-            if (!isAdmin) {
-                const today = new Date().toDateString();
-                const storageKey = `daily_limit_${today} `;
-                const currentCount = parseInt(localStorage.getItem(storageKey) || '0');
+            // --- OTOMATİK İÇERİK KONTROLÜ (Sadece Admin Olmayanlar İçin) ---
+            let status = 'approved'; // Default to approved (auto-publish)
 
-                if (currentCount >= 5) {
-                    if (showToast) showToast("Günlük mesaj limitine ulaştınız (5). Yarın tekrar bekleriz!", "warning");
+            if (!isAdmin) {
+                const analysis = analyzeContent(text);
+
+                if (analysis.status === 'rejected') {
+                    if (showToast) showToast("Mesajınız uygunsuz ifadeler içeriyor. Lütfen düzeltip tekrar deneyin.", "error");
                     setIsSendingFeedback(false);
-                    return;
+                    return; // Stop execution
+                } else if (analysis.status === 'pending') {
+                    status = 'unread'; // Mark as unread/pending for admin review
+                } else {
+                    status = 'approved'; // Clean content is auto-approved
                 }
 
-                // Limit Artır (Sadece admin değilse)
-                localStorage.setItem(storageKey, (currentCount + 1).toString());
+                // --- BÖLÜM BAŞINA LİMİT KONTROLÜ ---
+                // Kullanıcının bu bölümdeki mevcut yorumlarını sayıyoruz
+                if (currentUser) {
+                    const userComments = chapterComments.filter(c => c.uids && c.uids.includes(currentUser.uid));
+                    const isReply = !!parentId;
+
+                    // Limitleri Config'den Al
+                    const limit = isReply ? CONFIG.REPLY_LIMIT_PER_CHAPTER : CONFIG.MESSAGE_LIMIT_PER_CHAPTER;
+
+                    // İlgili türdeki (yanıt veya ana mesaj) sayıyı bul
+                    // Not: Basitleştirmek için toplam yorum sayısına bakıyoruz, 
+                    // veya isReply'ye göre filtreleyebiliriz. Kullanıcı isteği "yeni mesaj limiti 10, cevap limiti 50".
+                    const userCount = userComments.filter(c => isReply ? !!c.parentId : !c.parentId).length;
+
+                    if (userCount >= limit) {
+                        if (showToast) showToast(`Bu bölüm için ${isReply ? 'yanıt' : 'mesaj'} limitine (${limit}) ulaştınız.`, "warning");
+                        setIsSendingFeedback(false);
+                        return;
+                    }
+                }
+            } else {
+                // Admin validasyonunu her zaman approved yapar
+                status = 'approved';
             }
 
             // Sayfa Bilgisini Hazırla
@@ -81,6 +133,23 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
             const pageInfo = chapter ? `${book.title} / ${chapter.title}` : `Kitap: ${activeBookId}, Bölüm: ${activeChapterIndex}`;
 
             const user = auth.currentUser;
+
+            // Allow overriding name for admins (e.g. "Editör")
+            // _postAsEditor is passed as true if admin checkbox is checked
+            const postAsEditor = isAdmin && postAsEditorInput === true;
+
+            // Determine Name
+            let finalName = user ? user.displayName : 'Anonim Okuyucu';
+            if (postAsEditor) {
+                finalName = parentId ? 'Editör Yanıtı' : 'Editör Mesajı';
+            }
+
+            // Determine Photo
+            let finalPhoto = user ? user.photoURL : null;
+            if (postAsEditor) {
+                finalPhoto = '/said.png'; // Editor profile picture from public folder
+            }
+
             const newFeedback = {
                 text: text, // Legacy support
                 feedback: text, // Main field
@@ -90,24 +159,26 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
                 bookId: activeBookId,
                 chapterIndex: activeChapterIndex,
                 date: serverTimestamp(),
-                status: 'unread',
+                status: status, // Dynamic status based on analysis
                 uids: user ? [user.uid] : [],
                 email: user ? user.email : 'anonim',
-                name: user ? user.displayName : 'Anonim Okuyucu',
-                photo: user ? user.photoURL : null,
+                name: finalName,
+                photo: finalPhoto,
                 selectedText: selectedText || null, // State'ten veya argümandan
                 likes: []
             };
 
             await addDoc(collection(db, "comments"), newFeedback);
 
-            // Limit artırma işlemi yukarı taşındı (conditional olduğu için)
-
             // Mesaj Türüne Göre Bildirim
             const isReport = ['bug', 'typo'].includes(category);
-            const successMsg = isReport
-                ? "Bildiriminiz teknik ekibe iletildi. Katkınız için teşekkürler!"
-                : "Yorumunuz editör onayına gönderildi. Teşekkürler!";
+            let successMsg = "";
+
+            if (status === 'approved') {
+                successMsg = isReport ? "Bildiriminiz alındı. Teşekkürler!" : "Yorumunuz yayınlandı!";
+            } else {
+                successMsg = "Yorumunuz editör onayına gönderildi. Teşekkürler!";
+            }
 
             if (showToast) showToast(successMsg, "success");
 

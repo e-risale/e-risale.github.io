@@ -183,6 +183,8 @@ function AppContent() {
       <AdminDashboard
         onNavigate={(target) => setView(target)}
         onBack={() => setView('home')}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
     );
   }
@@ -200,7 +202,9 @@ function AppContent() {
         onReply={adminState.handleReply}
         onDeleteAll={adminState.handleDeleteArchived}
         onExport={adminState.handleExportExcel}
+        updateCategory={adminState.updateCategory}
         darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
     );
   }
@@ -210,6 +214,8 @@ function AppContent() {
       <DictionaryManager
         onBack={() => setView('admin')}
         user={user}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
     );
   }
@@ -222,6 +228,8 @@ function AppContent() {
           // Refresh status when returning from manager
           getPublicationStatus().then(setPublishedChapters);
         }}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
       />
     );
   }
@@ -283,8 +291,8 @@ function AppContent() {
         />
       )}
 
-      {view === 'editor' && <Editor onSwitchMode={handleSwitchMode} user={user} />}
-      {view === 'ai_editor' && <AIEditor onSwitchMode={handleSwitchMode} />}
+      {view === 'editor' && <Editor onSwitchMode={handleSwitchMode} user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
+      {view === 'ai_editor' && <AIEditor onSwitchMode={handleSwitchMode} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}
 
       {/* GLOBAL MODALS */}
       <BookmarkModal

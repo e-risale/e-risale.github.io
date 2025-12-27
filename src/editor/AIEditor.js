@@ -7,7 +7,7 @@ import { AIReportList } from './components/AIReportList'; // Import
 
 const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 
-export default function AIEditor({ onSwitchMode }) {
+export default function AIEditor({ onSwitchMode, darkMode, toggleDarkMode }) {
     // eslint-disable-next-line no-unused-vars
     const [activeBookId, setActiveBookId] = useState(null);
     const [activeChapterId, setActiveChapterId] = useState(null);
@@ -20,7 +20,7 @@ export default function AIEditor({ onSwitchMode }) {
     const [isGlobalProcessing, setIsGlobalProcessing] = useState(false);
     const isProcessingRef = useRef(false);
     const [processingQueue, setProcessingQueue] = useState([]);
-    const [darkMode] = useState(true); // setDarkMode removed as unused
+
 
     // Sidebar Expansion State
     const [expandedBooks, setExpandedBooks] = useState({});
@@ -403,6 +403,10 @@ export default function AIEditor({ onSwitchMode }) {
                             className={`px-4 py-2 rounded font-bold shadow text-xs flex items-center gap-2 ${showReport ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'}`}
                         >
                             📋 Çeviri Raporu
+                        </button>
+
+                        <button onClick={toggleDarkMode} className={`p-2 rounded font-bold shadow text-xs transition-colors ${darkMode ? 'bg-gray-700 text-amber-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>
+                            {darkMode ? '☀️' : '🌙'}
                         </button>
 
                         <button
