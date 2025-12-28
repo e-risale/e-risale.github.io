@@ -10,8 +10,14 @@ export const CONFIG = {
   // --- ADMIN EMAIL CONFIG ---
   ADMIN_EMAIL_CONFIG: {
     recipients: ["kolay.risale@gmail.com"], // Mail gönderilecek adminler
-    dailyLimit: 5, // Günde en fazla kaç mail gönderilecek
-    minIntervalHours: 2 // İki mail arası en az kaç saat olmalı (Opsiyonel kontrol)
+    dailyLimit: 50, // Günde en fazla kaç mail gönderilecek
+    minIntervalHours: 1 // İki mail arası en az kaç saat olmalı (Opsiyonel kontrol)
+  },
+  EMAILJS_CONFIG: {
+    SERVICE_ID: "service_3zxyi2k",
+    TEMPLATE_ID: "template_fecswfl",
+    PUBLIC_KEY: "MZdefDJ222RxCh4qQ",
+    immediateMode: false // true ise beklemeden hemen atar (Test için)
   }
 };
 

@@ -86,6 +86,16 @@ const AdminDashboard = ({ onNavigate, onBack, darkMode, toggleDarkMode }) => {
                         darkMode={darkMode}
                         onClick={() => onNavigate('admin_stats')}
                     />
+
+                    {/* CARD 7: UPDATES MANAGER */}
+                    <AdminCard
+                        title="Duyuru & Yenilikler"
+                        desc="Ana sayfadaki güncelleme ve duyuru panosunu yönet."
+                        icon="🔔"
+                        color="bg-orange-100 text-orange-700"
+                        darkMode={darkMode}
+                        onClick={() => onNavigate('admin_updates')}
+                    />
                 </div>
             </main>
         </div>

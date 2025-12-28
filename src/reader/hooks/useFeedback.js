@@ -16,13 +16,13 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
 
     // --- YORUMLARI GÖRÜNTÜLEME STATE ---
     const [chapterComments, setChapterComments] = useState([]);
-    const [isLoadingComments, setIsLoadingComments] = useState(false);
+    // const [isLoadingComments, setIsLoadingComments] = useState(false); // Unused
 
     // --- YORUMLARI ÇEKME VE DİNLEME ---
     useEffect(() => {
         if (!activeBookId) return;
 
-        setIsLoadingComments(true);
+        // setIsLoadingComments(true);
         // Sadece bu bölümün ve ONAYLANMIŞ yorumlarını getir
         const q = query(
             collection(db, "comments"),
@@ -45,7 +45,7 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
             });
 
             setChapterComments(comments);
-            setIsLoadingComments(false);
+            // setIsLoadingComments(false);
         });
 
         return () => unsubscribe();

@@ -8,16 +8,17 @@ import BookIntro from './BookIntro';
 import AdminDashboard from './admin/AdminDashboard';
 import MessageManager from './admin/MessageManager';
 import DictionaryManager from './admin/DictionaryManager';
+import PublicationManager from './admin/PublicationManager';
+import AdminStats from './admin/AdminStats';
+import UpdatesManager from './admin/UpdatesManager'; // YENİ
 import { useAdmin } from './reader/hooks/useAdmin';
 import { useBookmarks } from './reader/hooks/useBookmarks';
 import { ToastProvider, useToast } from './reader/context/ToastContext';
 import BookmarkModal from './reader/components/modals/BookmarkModal';
-import SearchModal from './reader/components/modals/SearchModal'; // YENİ
-import { library } from './data/library'; // YENİ
-import { auth, loginWithGoogle, logout, getPublicationStatus } from './firebase'; // YENİ
+import SearchModal from './reader/components/modals/SearchModal';
+import { library } from './data/library';
+import { auth, loginWithGoogle, logout, getPublicationStatus } from './firebase';
 import { logVisit } from './services/AnalyticsService';
-import PublicationManager from './admin/PublicationManager';
-import AdminStats from './admin/AdminStats';
 
 function AppContent() {
   // --- UI Routing State ---
@@ -150,11 +151,6 @@ function AppContent() {
     setActiveChapterIndex(chapIdx);
     setIsSearchModalOpen(false);
     setView('read');
-    // If needed, pass chunkIdx to Reader via Ref mechanism logic update?
-    // Reader checks props on mount/update? 
-    // Current Reader flow relies on internal state for location unless we force it.
-    // But we set activeBookId/Chapter which triggers Reader updates.
-    // Chunk jump might require `readerRef` usage if View is already Read.
 
     setTimeout(() => {
       if (readerRef.current && readerRef.current.navigateToLocation) {
@@ -244,6 +240,15 @@ function AppContent() {
         onBack={() => setView('admin')}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
+      />
+    );
+  }
+
+  if (view === 'admin_updates') {
+    return (
+      <UpdatesManager
+        onBack={() => setView('admin')}
+        darkMode={darkMode}
       />
     );
   }

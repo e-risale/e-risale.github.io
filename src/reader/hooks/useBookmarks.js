@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from '../../firebase';
 import { collection, addDoc, deleteDoc, query, where, onSnapshot, serverTimestamp, doc } from 'firebase/firestore';
-import { generateSnippet, formatLastUpdated, formatDateWithTime } from '../utils/readerUtils';
+// import { formatLastUpdated } from '../../utils/formatting'; // Unused
+import { generateSnippet, formatDateWithTime } from '../utils/readerUtils';
 
 export const useBookmarks = (activeBookId, activeChapterIndex, bookData, showToast) => {
     const [bookmarks, setBookmarks] = useState([]);

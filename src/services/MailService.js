@@ -1,15 +1,14 @@
-
 import { CONFIG } from '../config';
-import { getPublicationStatus, savePublicationStatus } from './DataService'; // Re-use data service persistence if possible, OR we might need a dedicated Mail DB path
-// Note: For now, I'll assume we can use a separate JSON file for mail status if Electron, or Firebase path if Web.
-// To keep it simple and aligned with current DataService, let's create a new 'mail_status.json' concept.
+import emailjs from '@emailjs/browser';
+// import { getPublicationStatus, savePublicationStatus } from './DataService'; // Unused
+
 
 // SIMULATED EMAIL SERVICE
 // In a real app, this would use EmailJS, SendGrid API, or a Firebase Function.
 // Since we are client-side only (mostly), we'll implement the LOGIC here but print to console/toast.
 // User can replace 'sendEmailToProvider' with actual EmailJS call.
 
-export const checkAndSendAdminNotification = async (newMsgCategory, allMessages) => {
+export const checkAndSendAdminNotification = async (newMsgCategory, allMessages, force = false) => {
     const { recipients, dailyLimit } = CONFIG.ADMIN_EMAIL_CONFIG;
     if (!recipients || recipients.length === 0) return;
 
@@ -49,7 +48,9 @@ export const checkAndSendAdminNotification = async (newMsgCategory, allMessages)
     const intervalMs = (CONFIG.ADMIN_EMAIL_CONFIG.minIntervalHours || 4) * 60 * 60 * 1000;
     const timeSinceLast = lastDate ? (now.getTime() - lastDate.getTime()) : Infinity;
 
-    if (timeSinceLast < intervalMs) {
+    const shouldSendImmediately = force || CONFIG.EMAILJS_CONFIG.immediateMode;
+
+    if (timeSinceLast < intervalMs && !shouldSendImmediately) {
         // Too soon, just save the updated pending count
         console.log(`Mail buffered. Time since last: ${(timeSinceLast / 60000).toFixed(1)} mins. Needed: ${(intervalMs / 60000)} mins.`);
         await saveMailStatus(status);
@@ -59,7 +60,7 @@ export const checkAndSendAdminNotification = async (newMsgCategory, allMessages)
     // 4. Send Email
     const success = await sendEmailToProvider({
         to: recipients,
-        subject: `Risale Proje - Yeni Bildirimler (${Object.values(status.pendingCounts).reduce((a, b) => a + b, 0)})`,
+        subject: `Yeni Gelen Bildirimler (${Object.values(status.pendingCounts).reduce((a, b) => a + b, 0)})`,
         body: generateEmailBody(status.pendingCounts)
     });
 
@@ -93,34 +94,61 @@ const saveMailStatus = async (status) => {
 };
 
 const generateEmailBody = (counts) => {
-    let text = "Son bildirimden bu yana gelen mesajlar:\n\n";
+
+    // Kategori isimlerinin Türkçe karşılıkları
+    const CATEGORY_LABELS = {
+        bug: "Hata Bildirimi",
+        typo: "Yazım Yanlışı",
+        suggestion: "Öneri",
+        report: "Şikayet/Rapor",
+        inappropriate: "Uygunsuz İçerik",
+        general: "Genel Yorum"
+    };
+
+    let text = "";
     for (const [cat, count] of Object.entries(counts)) {
-        text += `- ${cat}: ${count} adet\n`;
+        const label = CATEGORY_LABELS[cat] || cat; // Varsa Türkçe karşılığı, yoksa orjinal key
+        text += `- ${label}: ${count} adet\n`;
     }
     text += "\nPanelden detayları görebilirsiniz.";
     return text;
 };
 
-// --- REAL SENDING LOGIC PLACEHOLDER ---
+// --- REAL SENDING LOGIC ---
+// import emailjs from '@emailjs/browser'; // Moved to top
+
 const sendEmailToProvider = async ({ to, subject, body }) => {
-    // INTEGRATION POINT: EmailJS or other service
-    console.group("📨 MOCK EMAIL SENT");
-    console.log("To:", to);
-    console.log("Subject:", subject);
-    console.log("Body:", body);
-    console.groupEnd();
+    // INTEGRATION POINT: EmailJS
+    console.group("📨 SENDING REAL EMAIL...");
 
-    // Example EmailJS implementation:
-    /*
+    // EmailJS usually takes template params. 
+    // We need to map our 'subject' and 'body' to the variable names in your EmailJS template.
+    // Assuming your template uses {{subject}} and {{message}}
+
+    // Note: 'to' field handling relies on what your Template expects. 
+    // Usually EmailJS sends to the configured 'To Email' in dashboard, 
+    // OR you can pass a 'to_email' variable if your template has it.
+    // For now, we will send the aggregated report to the fixed recipient in Config.
+
+    const templateParams = {
+        to_email: to.join(','),
+        subject: subject,
+        message: body
+    };
+
     try {
-        await emailjs.send('default_service', 'template_id', {
-            to_email: to.join(','),
-            subject: subject,
-            message: body
-        }, 'user_id');
+        const response = await emailjs.send(
+            CONFIG.EMAILJS_CONFIG.SERVICE_ID,
+            CONFIG.EMAILJS_CONFIG.TEMPLATE_ID,
+            templateParams,
+            CONFIG.EMAILJS_CONFIG.PUBLIC_KEY
+        );
+        console.log('SUCCESS!', response.status, response.text);
+        console.groupEnd();
         return true;
-    } catch (e) { console.error(e); return false; }
-    */
-
-    return true; // Simulate success
+    } catch (error) {
+        console.error('FAILED...', error);
+        console.groupEnd();
+        return false;
+    }
 };

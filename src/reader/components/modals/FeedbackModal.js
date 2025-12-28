@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { CATEGORY_LABELS } from '../../utils/readerUtils';
+// import { CATEGORY_LABELS } from '../../utils/readerUtils'; // Unused
 
 const FeedbackModal = ({
     isOpen,
