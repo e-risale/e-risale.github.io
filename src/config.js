@@ -5,7 +5,14 @@ export const CONFIG = {
   BATCH_SIZE: 5, // Vagon Sayısı (Buradan değiştirebilirsiniz)
   MESSAGE_LIMIT_PER_CHAPTER: 10,
   REPLY_LIMIT_PER_CHAPTER: 50,
-  BAD_WORDS: ["amına", "mamına", "korum", "koduğumun", "kodumun", "aptal", "salak", "gerizekalı", "mal", "dangalak", "ahmak", "kafasız", "öküz", "yavşak", "piç", "göt", "amk", "aq", "sik", "siktir", "sikerim", "yarrak", "yarrağım", "oç", "kahpe", "fahişe"] // Genişletilebilir liste
+  BAD_WORDS: ["amına", "mamına", "korum", "koduğumun", "kodumun", "aptal", "salak", "gerizekalı", "mal", "dangalak", "ahmak", "kafasız", "öküz", "yavşak", "piç", "göt", "amk", "aq", "sik", "siktir", "sikerim", "yarrak", "yarrağım", "oç", "kahpe", "fahişe"], // Genişletilebilir liste
+
+  // --- ADMIN EMAIL CONFIG ---
+  ADMIN_EMAIL_CONFIG: {
+    recipients: ["kolay.risale@gmail.com"], // Mail gönderilecek adminler
+    dailyLimit: 5, // Günde en fazla kaç mail gönderilecek
+    minIntervalHours: 2 // İki mail arası en az kaç saat olmalı (Opsiyonel kontrol)
+  }
 };
 
 // --- READER CONFIG ---
@@ -45,6 +52,7 @@ export const AVAILABLE_MODELS = [
 // --- ORTAK KURALLAR (ANAYASA) ---
 // Burayı değiştirdiğinizde hem Web hem API promptu değişir.
 const COMMON_RULES = `
+- Sen, Risale-i Nur Külliyatı'na ve Osmanlı Türkçesi lügatına tam hakimiyeti olan, kelimelerin hem etimolojik kökenlerini hem de ıstılahi (terimsel) derinliklerini bilen uzman bir editör ve filologsun.
 1.EN ÜST VE DEĞİŞMEZ KURAL (KRİTİK):
 -Orijinal metin KESİNLİKLE DEĞİŞTİRİLMEYECEK.
 -Cümle yapısı, kelime sırası, paragraf düzeni, satır başları, büyük/küçük harfler, noktalama işaretleri ve imla birebir korunacak.

@@ -4,7 +4,7 @@ import { getFirestore, addDoc, collection, serverTimestamp, query, where, getDoc
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDzqV8-DhN4nDmeNRFn1iRzOFKRTXzWsdc",
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
     authDomain: "risale-feedback.firebaseapp.com",
     projectId: "risale-feedback",
     storageBucket: "risale-feedback.firebasestorage.app",

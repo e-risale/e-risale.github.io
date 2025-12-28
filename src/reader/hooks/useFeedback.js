@@ -203,6 +203,14 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
 
             await addDoc(collection(db, "comments"), newFeedback);
 
+            // --- ADMIN NOTIFICATION START ---
+            // Trigger background email check without blocking UI
+            // We use 'catch' to prevent any email service error from disrupting the user flow.
+            import('../../services/MailService').then(service => {
+                service.checkAndSendAdminNotification(finalCategory, "TODO:PassAllMsgIfAvailable");
+            }).catch(err => console.error("Mail service error:", err));
+            // --- ADMIN NOTIFICATION END ---
+
             // Mesaj Türüne Göre Bildirim
             const isReport = ['bug', 'typo'].includes(category);
             let successMsg = "";
