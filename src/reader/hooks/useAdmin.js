@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from '../../firebase';
-import { collection, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot, getDocs, writeBatch, where, serverTimestamp } from 'firebase/firestore';
+import { collection, deleteDoc, doc, updateDoc, query, orderBy, onSnapshot, getDocs, writeBatch, where, serverTimestamp, getDoc, addDoc } from 'firebase/firestore';
 
 export const adminEmails = ["kolay.risale@gmail.com", "turan1971@gmail.com"]; // Admin email listesi - Shared constant
 
@@ -60,7 +60,6 @@ export const useAdmin = (showToast) => {
     }, [isAdmin, showToast]);
 
     const handleAdminDeleteFeedback = async (id) => {
-        if (!window.confirm("Bu mesajı kalıcı olarak silmek istediğinizden emin misiniz?")) return;
         try {
             await deleteDoc(doc(db, "comments", id));
             if (showToast) showToast("Mesaj silindi.", "success");
@@ -164,11 +163,39 @@ export const useAdmin = (showToast) => {
 
     const handleReply = async (id, replyText) => {
         try {
-            await updateDoc(doc(db, "comments", id), {
-                reply: replyText,
-                replyDate: serverTimestamp()
-            });
-            if (showToast) showToast("Yanıtınız kaydedildi.", "success");
+            // 1. Get Parent Data (for context)
+            const parentRef = doc(db, "comments", id);
+            const parentSnap = await getDoc(parentRef);
+
+            if (!parentSnap.exists()) {
+                if (showToast) showToast("Orijinal mesaj bulunamadı.", "error");
+                return;
+            }
+            const parentData = parentSnap.data();
+
+            // DETERMINING ROOT PARENT (THREAD ID)
+            const threadRootId = parentData.parentId || id;
+
+            // 2. Create Reply Document (Threaded)
+            const replyDoc = {
+                text: replyText,
+                feedback: replyText,
+                category: 'general',
+                parentId: threadRootId,
+                bookId: parentData.bookId,
+                chapterIndex: parentData.chapterIndex,
+                page: parentData.page || 'Yönetim Paneli',
+                name: 'Editör Yanıtı',
+                photo: '/said.png',
+                email: 'admin@risalekolay.com',
+                date: serverTimestamp(),
+                status: 'approved',
+                likes: []
+            };
+
+            await addDoc(collection(db, "comments"), replyDoc);
+
+            if (showToast) showToast("Yanıtınız gönderildi.", "success");
         } catch (error) {
             console.error("Yanıt hatası:", error);
             if (showToast) showToast("Yanıt gönderilemedi.", "error");
@@ -194,6 +221,16 @@ export const useAdmin = (showToast) => {
         }
     };
 
+    const handleUpdateFeedbackContent = async (id, newContent) => {
+        try {
+            await updateDoc(doc(db, "comments", id), { feedback: newContent });
+            if (showToast) showToast("Mesaj içeriği güncellendi.", "success");
+        } catch (error) {
+            console.error("Güncelleme hatası:", error);
+            if (showToast) showToast("Güncelleme hatası.", "error");
+        }
+    };
+
     return {
         isAdmin,
         adminFeedbacks,
@@ -208,7 +245,8 @@ export const useAdmin = (showToast) => {
         handleDeleteArchived,
         handleReply,
         handleExportExcel,
-        updateCategory
+        updateCategory,
+        handleUpdateFeedbackContent
     };
 };
 

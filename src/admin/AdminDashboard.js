@@ -77,6 +77,15 @@ const AdminDashboard = ({ onNavigate, onBack, darkMode, toggleDarkMode }) => {
                         darkMode={darkMode}
                         onClick={() => onNavigate('admin_publication')}
                     />
+                    {/* CARD 6: STATISTICS */}
+                    <AdminCard
+                        title="İstatistikler"
+                        desc="Ziyaretçi sayılarını ve popüler içerikleri analiz et."
+                        icon="📊"
+                        color="bg-indigo-100 text-indigo-700"
+                        darkMode={darkMode}
+                        onClick={() => onNavigate('admin_stats')}
+                    />
                 </div>
             </main>
         </div>

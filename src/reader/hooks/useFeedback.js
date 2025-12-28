@@ -11,6 +11,7 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
     const [feedbackText, setFeedbackText] = useState("");
     const [feedbackCategory, setFeedbackCategory] = useState("general");
     const [selectedText, setSelectedText] = useState("");
+    const [selectedContext, setSelectedContext] = useState(""); // NEW
     const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
     // --- YORUMLARI GÖRÜNTÜLEME STATE ---
@@ -78,7 +79,7 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
     };
 
     // --- FEEDBACK GÖNDERME ---
-    const sendFeedback = async (category, text, photoURL, _bookId, _chapterIndex, _selectedText, parentId = null, postAsEditorInput = false) => {
+    const sendFeedback = async (category, text, photoURL, _bookId, _chapterIndex, _selectedText, parentId = null, postAsEditorInput = false, isPrivateInput = false, _contextText = "") => {
         if (!text || !text.trim()) return;
 
         setIsSendingFeedback(true);
@@ -88,6 +89,7 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
 
             // --- OTOMATİK İÇERİK KONTROLÜ (Sadece Admin Olmayanlar İçin) ---
             let status = 'approved'; // Default to approved (auto-publish)
+            const isPrivate = isPrivateInput === true;
 
             if (!isAdmin) {
                 const analysis = analyzeContent(text);
@@ -100,6 +102,11 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
                     status = 'unread'; // Mark as unread/pending for admin review
                 } else {
                     status = 'approved'; // Clean content is auto-approved
+                }
+
+                // If user wants it private, FORCE unread (so it doesn't get auto-approved/published)
+                if (isPrivate) {
+                    status = 'unread';
                 }
 
                 // --- BÖLÜM BAŞINA LİMİT KONTROLÜ ---
@@ -125,6 +132,9 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
             } else {
                 // Admin validasyonunu her zaman approved yapar
                 status = 'approved';
+                // But if admin explicitly sets private (unlikely but possible), set unread?
+                // Usually admin posts are public announcements. If admin wants private note, maybe 'unread' is fine.
+                if (isPrivate) status = 'unread';
             }
 
             // Sayfa Bilgisini Hazırla
@@ -150,22 +160,45 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
                 finalPhoto = '/said.png'; // Editor profile picture from public folder
             }
 
+            // --- REPORT MANAGEMENT ---
+            let finalCategory = category;
+            let finalStatus = status;
+            let finalParentId = parentId;
+            let finalText = text;
+
+            if (category === 'report') {
+                finalCategory = 'inappropriate'; // New "Uygunsuz" category
+                finalStatus = 'unread'; // Always unread -> Admin review
+                finalParentId = null; // Don't show as reply in Reader
+                const reportedComment = chapterComments.find(c => c.id === parentId) ||
+                    chapterComments.flatMap(c => c.replies || []).find(r => r && r.id === parentId);
+
+                if (reportedComment) {
+                    finalText = `Bildirim Sebebi: ${text}\n\n--- RAPORLANAN MESAJ ---\nYazan: ${reportedComment.name}\nİçerik: ${reportedComment.feedback}`;
+                }
+            }
+
             const newFeedback = {
-                text: text, // Legacy support
-                feedback: text, // Main field
-                category,
-                parentId: parentId || null, // Thread support
+                text: finalText, // Legacy support
+                feedback: finalText, // Main field
+                category: finalCategory,
+                parentId: finalParentId || null, // Thread support
                 page: pageInfo,
                 bookId: activeBookId,
                 chapterIndex: activeChapterIndex,
                 date: serverTimestamp(),
-                status: status, // Dynamic status based on analysis
+                status: finalStatus, // Dynamic status based on analysis
+                isPrivate: isPrivate, // NEW: Private Message Flag
                 uids: user ? [user.uid] : [],
                 email: user ? user.email : 'anonim',
                 name: finalName,
                 photo: finalPhoto,
-                selectedText: selectedText || null, // State'ten veya argümandan
-                likes: []
+                selectedText: _selectedText || selectedText || null, // Prioritize argument
+                context: _contextText || selectedContext || null, // STORE CONTEXT
+                likes: [],
+                // Report Specific Fields
+                reportedCommentId: category === 'report' ? parentId : null,
+                reportReason: category === 'report' ? text : null
             };
 
             await addDoc(collection(db, "comments"), newFeedback);
@@ -174,7 +207,11 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
             const isReport = ['bug', 'typo'].includes(category);
             let successMsg = "";
 
-            if (status === 'approved') {
+            if (finalCategory === 'inappropriate' || category === 'report') {
+                successMsg = "Bildiriminiz iletildi. Teşekkürler!";
+            } else if (isPrivate) {
+                successMsg = "Mesajınız editöre iletildi (Gizli).";
+            } else if (status === 'approved') {
                 successMsg = isReport ? "Bildiriminiz alındı. Teşekkürler!" : "Yorumunuz yayınlandı!";
             } else {
                 successMsg = "Yorumunuz editör onayına gönderildi. Teşekkürler!";
@@ -185,6 +222,7 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
             setIsFeedbackModalOpen(false);
             setFeedbackText(""); // Reset
             setSelectedText(""); // Reset
+            setSelectedContext(""); // Reset
         } catch (error) {
             console.error("Hata:", error);
             if (showToast) showToast("Bir hata oluştu, lütfen tekrar deneyin.", "error");
@@ -234,6 +272,7 @@ export const useFeedback = (activeBookId, activeChapterIndex, showToast) => {
         feedbackText, setFeedbackText,
         feedbackCategory, setFeedbackCategory,
         selectedText, setSelectedText,
+        selectedContext, setSelectedContext, // EXPORT NEW STATE
 
         // Actions
         sendFeedback, // sendFeedback olarak export ediyoruz

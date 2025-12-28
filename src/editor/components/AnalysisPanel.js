@@ -916,13 +916,59 @@ const TranslationCorrectionView = ({ pages, activeBookId, activeChapterId, onFix
     }, [activeBookId, activeChapterId]);
 
     const loadRawData = async () => {
-        if (!window.api || !window.api.readRawFile) {
-            setError("Electron API bulunamadı veya eski sürüm.");
+        const book = library.find(b => b.id === activeBookId);
+        if (!book) {
+            setError(`Kitap bulunamadı: ${activeBookId}`);
             return;
         }
 
-        const book = library.find(b => b.id === activeBookId);
-        if (!book || !book.folderName) {
+        // Web Fallback: Use the loader from library.js
+        if (!window.api || !window.api.readRawFile) {
+            setLoading(true);
+            setError(null);
+            try {
+                // Try to find chapter by ID
+                let targetChapter = book.chapters.find(c => c.id === activeChapterId);
+
+                // Fallback: If activeChapterId is numeric string or number, try index
+                if (!targetChapter && !isNaN(activeChapterId)) {
+                    const idx = Number(activeChapterId);
+                    if (idx >= 0 && idx < book.chapters.length) {
+                        targetChapter = book.chapters[idx];
+                    }
+                }
+
+                // Fallback 2: Try standard ID format (bookId_index+1) simply as last resort?
+                // Usually activeChapterId is accurate.
+
+                if (!targetChapter) {
+                    setError(`Bölüm bulunamadı (ID: ${activeChapterId})`);
+                    setLoading(false);
+                    return;
+                }
+
+                console.log("Loading raw data via web loader:", targetChapter.id);
+                const module = await targetChapter.loader();
+                const data = module.default || module;
+
+                let loadedPages = [];
+                if (data.pages && Array.isArray(data.pages)) loadedPages = data.pages;
+                else if (Array.isArray(data)) loadedPages = data;
+
+                // Tag for debug
+                loadedPages._debugPath = "Web Loader (" + targetChapter.title + ")";
+                setRawPages(loadedPages);
+
+            } catch (err) {
+                setError("Web yükleme hatası: " + err.message);
+            } finally {
+                setLoading(false);
+            }
+            return;
+        }
+
+        // Desktop / Electron Logic
+        if (!book.folderName) {
             setError(`Kitap klasör bilgisi bulunamadı. (ID: ${activeBookId})`);
             return;
         }
@@ -940,7 +986,6 @@ const TranslationCorrectionView = ({ pages, activeBookId, activeChapterId, onFix
                 if (data.pages && Array.isArray(data.pages)) loadedPages = data.pages;
                 else if (Array.isArray(data)) loadedPages = data;
 
-                // Attach debug path to array (hacky but works for debug)
                 loadedPages._debugPath = result.filePath;
 
                 setRawPages(loadedPages);

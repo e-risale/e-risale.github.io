@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, loginWithGoogle, logout } from '../firebase';
 import { formatLastUpdated } from './utils/readerUtils';
+import { logPageView } from '../services/AnalyticsService';
 
 // Hooks
 import { useReader } from './hooks/useReader';
@@ -89,6 +90,11 @@ const Reader = React.forwardRef(({
         }
     }, [restoredScrollY]);
 
+    // --- Analytics ---
+    useEffect(() => {
+        logPageView(activeBookId, activeChapterIndex);
+    }, [activeBookId, activeChapterIndex]);
+
     // useBookmarks App.js'e taşındı
 
     // useAdmin App.js'e taşındı, props olarak geliyor
@@ -99,6 +105,7 @@ const Reader = React.forwardRef(({
         feedbackText, setFeedbackText,
         feedbackCategory, setFeedbackCategory,
         selectedText, setSelectedText,
+        selectedContext, setSelectedContext,
         sendFeedback,
         isSendingFeedback,
         chapterComments, // YENİ
@@ -273,13 +280,13 @@ const Reader = React.forwardRef(({
                     onTouchStart={(e) => e.stopPropagation()}
                 >
                     <button
-                        onClick={() => { setIsFeedbackModalOpen(true); setFeedbackCategory("suggestion"); setSelectedText(selectionRect.text); setSelectionRect(null); }}
+                        onClick={() => { setIsFeedbackModalOpen(true); setFeedbackCategory("suggestion"); setSelectedText(selectionRect.text); setSelectedContext(selectionRect.context); setSelectionRect(null); }}
                         className={`bg-blue-600 text-white rounded-full shadow-lg font-bold hover:bg-blue-700 hover:scale-105 transition-all flex items-center gap-2 border border-white/20 ${window.innerWidth < 768 ? "flex-1 justify-center py-3 text-xs px-2" : "px-5 py-2.5 text-sm"}`}
                     >
                         <span className="text-lg">💬</span> <span>Çeviri Öner</span>
                     </button>
                     <button
-                        onClick={() => { setIsFeedbackModalOpen(true); setFeedbackCategory("typo"); setSelectedText(selectionRect.text); setSelectionRect(null); }}
+                        onClick={() => { setIsFeedbackModalOpen(true); setFeedbackCategory("typo"); setSelectedText(selectionRect.text); setSelectedContext(selectionRect.context); setSelectionRect(null); }}
                         className={`bg-red-500 text-white rounded-full shadow-lg font-bold hover:bg-red-600 hover:scale-105 transition-all flex items-center gap-2 border border-white/20 ${window.innerWidth < 768 ? "flex-1 justify-center py-3 text-xs px-2" : "px-5 py-2.5 text-sm"}`}
                     >
                         <span className="text-lg">⚠️</span> <span>Hata Bildir</span>
@@ -412,6 +419,7 @@ const Reader = React.forwardRef(({
                 darkMode={darkMode}
                 user={user}
                 onLogin={loginWithGoogle}
+                isAdmin={isAdmin}
             />
 
             <QuoteCardModal

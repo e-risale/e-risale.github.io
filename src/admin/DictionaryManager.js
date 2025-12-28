@@ -160,69 +160,77 @@ const DictionaryManager = ({ onBack, user, darkMode, toggleDarkMode }) => {
     return (
         <div className={`min-h-screen font-sans transition-colors duration-300 ${darkMode ? 'bg-[#1a1b1e] text-gray-200' : 'bg-gray-50 text-gray-800'}`}>
             {/* Header */}
-            <div className={`fixed top-0 inset-x-0 h-16 z-30 flex items-center justify-between px-4 md:px-8 border-b transition-colors duration-300 ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center gap-3">
-                    <button onClick={onBack} className={`p-2 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'}`}>
-                        ←
-                    </button>
-                    <h1 className={`font-bold text-xl font-serif ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Sözlük Yönetimi</h1>
-                    <span className={`text-xs px-2 py-1 rounded font-mono ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>Top: {Object.keys(dictionary).length}</span>
+            <header className={`sticky top-0 z-30 border-b transition-colors duration-300 ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={onBack}
+                            className={`p-2 -ml-2 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                            title="Geri Dön"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        </button>
+                        <h1 className={`text-2xl font-bold tracking-tight ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Sözlük Yönetimi</h1>
+                        <span className={`text-xs px-2 py-1 rounded font-mono ml-2 ${darkMode ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>Top: {Object.keys(dictionary).length}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button onClick={toggleDarkMode} className={`p-2 rounded-full transition-colors ${darkMode ? 'bg-gray-700 text-amber-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                            {darkMode ? '☀️' : '🌙'}
+                        </button>
+                        <button onClick={handleManualSave} className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${darkMode ? 'bg-green-900/20 text-green-400 border-green-800 hover:bg-green-900/40' : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200'}`}>
+                            {window.api?.isElectron ? '💾 Dosyayı Kaydet' : '💾 İndir (JSON)'}
+                        </button>
+                        <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm">
+                            + Yeni Kelime
+                        </button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={toggleDarkMode} className={`p-2 rounded-lg text-xl transition-colors ${darkMode ? 'bg-gray-700 text-amber-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                        {darkMode ? '☀️' : '🌙'}
-                    </button>
-                    <button onClick={handleManualSave} className={`px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${darkMode ? 'bg-green-900/20 text-green-400 border-green-800 hover:bg-green-900/40' : 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200'}`}>
-                        {window.api?.isElectron ? '💾 Dosyayı Kaydet' : '💾 İndir (JSON)'}
-                    </button>
-                    <button onClick={() => setIsAddModalOpen(true)} className="px-4 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-sm">
-                        + Yeni Kelime
-                    </button>
-                </div>
-            </div>
+            </header>
 
             {/* Toolbar */}
-            <div className={`fixed top-16 left-0 right-0 z-20 border-b px-8 py-3 flex gap-4 shadow-sm transition-colors duration-300 ${darkMode ? 'bg-[#1a1b1e] border-gray-700' : 'bg-white'}`}>
-                <div className="relative flex-1 max-w-md">
-                    <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Orjinal Kelime Ara..."
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-[#25262b] border-gray-600 text-white' : 'bg-gray-50 border-gray-300'}`}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    {searchTerm && (
-                        <button
-                            onClick={() => setSearchTerm('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100"
-                        >
-                            ×
-                        </button>
-                    )}
-                </div>
-                <div className="relative flex-1 max-w-md">
-                    <span className="absolute left-3 top-2.5 text-gray-400">📖</span>
-                    <input
-                        type="text"
-                        placeholder="Kısa Anlam Ara..."
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-[#25262b] border-gray-600 text-white' : 'bg-gray-50 border-gray-300'}`}
-                        value={shortSearchTerm}
-                        onChange={(e) => setShortSearchTerm(e.target.value)}
-                    />
-                    {shortSearchTerm && (
-                        <button
-                            onClick={() => setShortSearchTerm('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100"
-                        >
-                            ×
-                        </button>
-                    )}
+            <div className={`fixed top-20 left-0 right-0 z-20 border-b shadow-sm transition-colors duration-300 ${darkMode ? 'bg-[#1a1b1e] border-gray-700' : 'bg-white'}`}>
+                <div className="max-w-7xl mx-auto px-6 py-3 flex gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                        <input
+                            type="text"
+                            placeholder="Orjinal Kelime Ara..."
+                            className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-[#25262b] border-gray-600 text-white' : 'bg-gray-50 border-gray-300'}`}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                    <div className="relative flex-1 max-w-md">
+                        <span className="absolute left-3 top-2.5 text-gray-400">📖</span>
+                        <input
+                            type="text"
+                            placeholder="Kısa Anlam Ara..."
+                            className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-[#25262b] border-gray-600 text-white' : 'bg-gray-50 border-gray-300'}`}
+                            value={shortSearchTerm}
+                            onChange={(e) => setShortSearchTerm(e.target.value)}
+                        />
+                        {shortSearchTerm && (
+                            <button
+                                onClick={() => setShortSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 p-1 w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* List */}
-            <div className="pt-32 pb-12 px-8 max-w-7xl mx-auto">
+            <div className="pt-40 pb-12 px-6 max-w-7xl mx-auto">
                 <div className={`rounded-xl shadow border overflow-hidden ${darkMode ? 'bg-[#25262b] border-gray-700' : 'bg-white border-gray-200'}`}>
                     <table className="w-full text-left border-collapse">
                         <thead className={`text-xs uppercase font-bold ${darkMode ? 'bg-[#1a1b1e] text-gray-400' : 'bg-gray-50 text-gray-500'}`}>

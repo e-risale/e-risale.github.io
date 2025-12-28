@@ -5,7 +5,7 @@ export const CONFIG = {
   BATCH_SIZE: 5, // Vagon Sayısı (Buradan değiştirebilirsiniz)
   MESSAGE_LIMIT_PER_CHAPTER: 10,
   REPLY_LIMIT_PER_CHAPTER: 50,
-  BAD_WORDS: ["amına", "mamına", "korum", "koduğumun", "küfür", "argo", "aptal", "salak", "gerizekalı", "mal", "dangalak", "ahmak", "kafasız", "öküz", "yavşak", "piç", "göt", "amk", "aq", "siktir", "sikerim", "yarrak", "oç", "kahpe", "fahişe"] // Genişletilebilir liste
+  BAD_WORDS: ["amına", "mamına", "korum", "koduğumun", "kodumun", "aptal", "salak", "gerizekalı", "mal", "dangalak", "ahmak", "kafasız", "öküz", "yavşak", "piç", "göt", "amk", "aq", "sik", "siktir", "sikerim", "yarrak", "yarrağım", "oç", "kahpe", "fahişe"] // Genişletilebilir liste
 };
 
 // --- READER CONFIG ---

@@ -15,7 +15,9 @@ import BookmarkModal from './reader/components/modals/BookmarkModal';
 import SearchModal from './reader/components/modals/SearchModal'; // YENİ
 import { library } from './data/library'; // YENİ
 import { auth, loginWithGoogle, logout, getPublicationStatus } from './firebase'; // YENİ
+import { logVisit } from './services/AnalyticsService';
 import PublicationManager from './admin/PublicationManager';
+import AdminStats from './admin/AdminStats';
 
 function AppContent() {
   // --- UI Routing State ---
@@ -47,10 +49,11 @@ function AppContent() {
 
   const { showToast } = useToast();
 
-  // --- Auth Listener ---
+  // --- Auth Listener & Analytics ---
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
+      logVisit(currentUser); // Track Visit with User Info
     });
     return () => unsubscribe();
   }, []);
@@ -199,10 +202,11 @@ function AppContent() {
         onMarkRead={adminState.handleAdminMarkRead}
         onApprove={adminState.handleApprove}
         onArchive={adminState.handleArchive}
-        onReply={adminState.handleReply}
         onDeleteAll={adminState.handleDeleteArchived}
         onExport={adminState.handleExportExcel}
+        onReply={adminState.handleReply}
         updateCategory={adminState.updateCategory}
+        onUpdateContent={adminState.handleUpdateFeedbackContent}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
       />
@@ -228,6 +232,16 @@ function AppContent() {
           // Refresh status when returning from manager
           getPublicationStatus().then(setPublishedChapters);
         }}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+      />
+    );
+  }
+
+  if (view === 'admin_stats') {
+    return (
+      <AdminStats
+        onBack={() => setView('admin')}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
       />

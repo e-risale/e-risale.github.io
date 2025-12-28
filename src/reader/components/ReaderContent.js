@@ -5,7 +5,9 @@ import { formatLastUpdated } from '../utils/readerUtils';
 import { READER_CONFIG } from '../../config';
 
 // --- TOOLTIP TOKEN COMPONENT ---
-const TooltipToken = ({ p1, p2, p3, isModernMode, darkMode, highlightText, activeHighlight, fontSize, fontFamily, scale, setMobileTooltipData, onEditClick, activeTooltipCloseRef }) => {
+// --- TOOLTIP TOKEN COMPONENT ---
+const TooltipToken = ({ p1, p2, p3, isModernMode, darkMode, highlightText, activeHighlight, fontSize, fontFamily, scale, setMobileTooltipData, onEditClick, activeTooltipCloseRef, context }) => {
+
     const [isOpen, setIsOpen] = useState(false);
     const timeoutRef = useRef(null);
     const triggerRef = useRef(null);
@@ -47,7 +49,8 @@ const TooltipToken = ({ p1, p2, p3, isModernMode, darkMode, highlightText, activ
         const selectionRect = {
             top: rect.top + window.scrollY - 50,
             left: rect.left + (rect.width / 2) - 80,
-            text: `[[${p1}|${p2}${p3 ? '|' + p3 : ''}]]`
+            text: `[[${p1}|${p2}${p3 ? '|' + p3 : ''}]]`,
+            context: context
         };
         onEditClick(selectionRect);
     };
@@ -125,6 +128,50 @@ const ChunkItem = React.memo(({ chunk, index, textMode, fontSize, fontFamily, da
         // Split by tokens, newlines, Arabic text, AND Footnote markers
         const parts = text.split(/(\[\[[\s\S]*?\]\]|\(\([\s\S]*?\)\)|\*\*[\s\S]*?\*\*|___ASTERISM___|\n|\(Hâşiye\[\d+\]\)|\[\d+\] Hâşiye:|[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+)/g);
 
+        const getPlainText = (str) => {
+            if (!str) return "";
+            return str.replace(/\[\[(.*?)\|.*?\]\]/g, '$1')
+                .replace(/\(\((.*?)\)\)/g, '$1')
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\(Hâşiye\[\d+\]\)/g, '')
+                .replace(/\[\d+\] Hâşiye:/g, '');
+        };
+
+        const getContext = (idx) => {
+            // 1. BACKWARD (Previous Context)
+            let beforeRec = "";
+            for (let i = idx - 1; i >= 0; i--) {
+                beforeRec = getPlainText(parts[i]) + beforeRec;
+                if (beforeRec.length > 200) break; // Limit search
+            }
+            // Find last sentence boundary in previous text
+            const sentences = beforeRec.split(/[\.\!\?](?:\s|$)/);
+            // Take last sentence fragment
+            let cleanBefore = sentences.length > 0 ? sentences[sentences.length - 1] : beforeRec;
+
+            const beforeWords = cleanBefore.trim().split(/\s+/);
+            const finalBefore = beforeWords.length > 7 ? beforeWords.slice(-7).join(" ") : cleanBefore.trim();
+
+            // 2. FORWARD (Next Context)
+            let afterRec = "";
+            for (let i = idx + 1; i < parts.length; i++) {
+                afterRec += getPlainText(parts[i]);
+                if (afterRec.length > 200) break;
+            }
+
+            // Find first sentence boundary
+            const firstPunctuationIndex = afterRec.search(/[\.\!\?]/);
+            let cleanAfter = afterRec;
+            if (firstPunctuationIndex !== -1) {
+                cleanAfter = afterRec.substring(0, firstPunctuationIndex + 1); // Include punctuation
+            }
+
+            const afterWords = cleanAfter.trim().split(/\s+/);
+            const finalAfter = afterWords.length > 7 ? afterWords.slice(0, 7).join(" ") : cleanAfter.trim();
+
+            return `...${finalBefore} [${getPlainText(parts[idx])}] ${finalAfter}...`;
+        };
+
         return parts.map((part, partIndex) => {
             if (part === '\n') return <br key={partIndex} />;
             if (part === '___ASTERISM___') return <span key={partIndex} className="font-bold mx-2">***</span>;
@@ -189,6 +236,8 @@ const ChunkItem = React.memo(({ chunk, index, textMode, fontSize, fontFamily, da
                 // But if they appear, treat them.
                 const contentRaw = part.slice(2, -2);
                 const splitParts = contentRaw.split('|');
+                const context = getContext(partIndex);
+
                 return (
                     <TooltipToken
                         key={partIndex}
@@ -199,6 +248,7 @@ const ChunkItem = React.memo(({ chunk, index, textMode, fontSize, fontFamily, da
                         setMobileTooltipData={setMobileTooltipData}
                         onEditClick={(rect) => setSelectionRect(rect)}
                         activeTooltipCloseRef={activeTooltipCloseRef}
+                        context={context}
                     />
                 );
             }
@@ -767,6 +817,9 @@ const ReaderContent = forwardRef(({
             // Check if selection is inside our content
             if (contentRef.current && !contentRef.current.contains(selection.anchorNode)) return;
 
+            // Check if selection is inside comments section (exclude)
+            if (selection.anchorNode.parentElement && selection.anchorNode.parentElement.closest('.reader-comments-section')) return;
+
             setSelectionRect({
                 top: rect.top + window.scrollY - 50,
                 left: rect.left + (rect.width / 2) - 80,
@@ -789,6 +842,7 @@ const ReaderContent = forwardRef(({
             const selection = window.getSelection();
             const text = selection.toString().trim();
             if (text.length > 2) {
+                if (selection.anchorNode && selection.anchorNode.parentElement && selection.anchorNode.parentElement.closest('.reader-comments-section')) return;
                 const range = selection.getRangeAt(0);
                 const rect = range.getBoundingClientRect();
                 setSelectionRect({

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { CATEGORY_LABELS } from '../../utils/readerUtils';
 
 const FeedbackModal = ({
@@ -13,23 +13,30 @@ const FeedbackModal = ({
     isSending,
     darkMode,
     user,
-    onLogin
+    onLogin,
+    isAdmin
 }) => {
     const textareaRef = useRef(null);
+    const [postAsEditor, setPostAsEditor] = useState(false);
+    const [isPrivate, setIsPrivate] = useState(false);
 
     // Auto-focus and scroll into view when modal opens
     useEffect(() => {
-        if (isOpen && user && textareaRef.current) {
-            // Slight delay to allow modal render and keyboard animation
-            setTimeout(() => {
-                textareaRef.current.focus();
+        if (isOpen) {
+            setPostAsEditor(false);
+            setIsPrivate(false);
+            if (user && textareaRef.current) {
+                // Slight delay to allow modal render and keyboard animation
+                setTimeout(() => {
+                    textareaRef.current.focus();
 
-                // On mobile, scroll the viewport to ensure the modal is at the top
-                if (window.innerWidth < 768) {
-                    // 'start' tries to put the element at the top of the viewport
-                    textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 400);
+                    // On mobile, scroll the viewport to ensure the modal is at the top
+                    if (window.innerWidth < 768) {
+                        // 'start' tries to put the element at the top of the viewport
+                        textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 400);
+            }
         }
     }, [isOpen, user]);
 
@@ -78,9 +85,49 @@ const FeedbackModal = ({
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2 items-center mt-2 flex-wrap">
+                            {isAdmin && (
+                                <label className="flex items-center gap-2 mr-4 cursor-pointer select-none group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${postAsEditor ? 'bg-amber-600 border-amber-600' : (darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50')}`}>
+                                        {postAsEditor && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={postAsEditor}
+                                        onChange={(e) => { setPostAsEditor(e.target.checked); if (e.target.checked) setIsPrivate(false); }}
+                                        className="hidden"
+                                    />
+                                    <span className={`text-xs font-bold transition-colors ${postAsEditor ? 'text-amber-600' : (darkMode ? 'text-gray-400 group-hover:text-amber-400' : 'text-gray-500 group-hover:text-amber-700')}`}>
+                                        Editör Modu
+                                    </span>
+                                </label>
+                            )}
+
+                            {!postAsEditor && (
+                                <label className="flex items-center gap-2 mr-auto cursor-pointer select-none group">
+                                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isPrivate ? 'bg-indigo-600 border-indigo-600' : (darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50')}`}>
+                                        {isPrivate && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        checked={isPrivate}
+                                        onChange={(e) => setIsPrivate(e.target.checked)}
+                                        className="hidden"
+                                    />
+                                    <span className={`text-xs font-bold transition-colors ${isPrivate ? 'text-indigo-600' : (darkMode ? 'text-gray-400 group-hover:text-indigo-400' : 'text-gray-500 group-hover:text-indigo-700')}`}>
+                                        🔒 Gizli (Yayınlanmasın)
+                                    </span>
+                                </label>
+                            )}
+
                             <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-bold opacity-60 hover:opacity-100">İptal</button>
-                            <button onClick={() => onSend(category, text, null, null, null, selectedText)} disabled={isSending || !text.trim()} className={`px-6 py-2 rounded-lg text-sm font-bold text-white shadow-md ${darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-[#2c2e33] hover:bg-black'}`}>{isSending ? '...' : 'Gönder'}</button>
+                            <button
+                                onClick={() => onSend(category, text, null, null, null, selectedText, null, postAsEditor, isPrivate)}
+                                disabled={isSending || !text.trim()}
+                                className={`px-6 py-2 rounded-lg text-sm font-bold text-white shadow-md ${darkMode ? 'bg-amber-700 hover:bg-amber-600' : 'bg-[#2c2e33] hover:bg-black'}`}
+                            >
+                                {isSending ? '...' : 'Gönder'}
+                            </button>
                         </div>
                     </>
                 )}
