@@ -60,16 +60,26 @@ export const EditorContent = ({
     }, [highlightTerm, pageIndex]);
 
     // --- RECURSIVE RENDER LOGIC ---
-    const renderRecursive = (text) => {
+    const renderRecursive = (text, baseIndex = 0) => {
         if (!text) return null;
-        return text.split(/(\[\[[\s\S]*?\]\]|\(\([\s\S]*?\)\)|\*\*[\s\S]*?\*\*)/g).map((part, i) => {
+        // Regex splits keeping delimiters: Tag, Red, Bold
+        const regex = /(\[\[[\s\S]*?\]\]|\(\([\s\S]*?\)\)|\*\*[\s\S]*?\*\*)/g;
+
+        // Track offset relative to the start of 'text'
+        let currentIndex = baseIndex;
+        const parts = text.split(regex);
+
+        return parts.map((part, i) => {
+            const partStart = currentIndex;
+            currentIndex += part.length;
+
             if (part.startsWith('**') && part.endsWith('**')) {
-                return <b key={i}>{renderRecursive(part.slice(2, -2))}</b>;
+                return <b key={i}>{renderRecursive(part.slice(2, -2), partStart + 2)}</b>;
             }
             if (part.startsWith('((') && part.endsWith('))')) {
                 const inner = part.slice(2, -2);
                 const isAr = isArabicText(inner);
-                return <span key={i} style={{ fontFamily: isAr ? "'Noto Naskh Arabic', serif" : 'inherit', fontSize: isAr ? '1.2em' : 'inherit' }} className={`font-bold ${darkMode ? 'text-red-400' : 'text-red-600'} `}>{renderRecursive(inner)}</span>;
+                return <span key={i} style={{ fontFamily: isAr ? "'Noto Naskh Arabic', serif" : 'inherit', fontSize: isAr ? '1.2em' : 'inherit' }} className={`font-bold ${darkMode ? 'text-red-400' : 'text-red-600'} `}>{renderRecursive(inner, partStart + 2)}</span>;
             }
             if (part.startsWith('[[') && part.endsWith(']]')) {
                 const raw = part.slice(2, -2).split('|');
@@ -98,7 +108,8 @@ export const EditorContent = ({
                             onClick={(e) => {
                                 e.stopPropagation();
                                 const r = e.target.getBoundingClientRect();
-                                onWordClick(r, orig, short, long);
+                                // Pass fullTag and exact Index
+                                onWordClick(r, orig, short, long, part, partStart);
                             }}
                             style={{ fontSize: isAr ? '1.25em' : 'inherit', fontFamily: isAr ? "'Noto Naskh Arabic', serif" : 'inherit' }}
                             className={`cursor-pointer border-b-2 border-dotted px-0.5 font-normal transition-colors ${color} `}
@@ -135,18 +146,39 @@ export const EditorContent = ({
 
     const renderInteractivePreview = () => {
         if (typeof rawText !== 'string') return null;
+
+        let globalIndex = 0;
+
         return rawText.split('\n').map((line, idx) => {
+            const currentLineStart = globalIndex;
+            globalIndex += line.length + 1; // +1 for newline
+
             if (!line.trim()) return <br key={idx} />;
+
             let cl = line;
             let sc = `mb-2 leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-800'} `;
+            let offsetAdjustment = 0;
+
             if (line.startsWith('#')) {
-                cl = line.replace('#', '').trim();
+                // Logic to match previous implementation stripping '#' but finding offset
+                // Original: cl = line.replace('#', '').trim();
+                // We find where this cl is in the line
+                let temp = line.replace('#', ''); // removes first #
+                cl = temp.trim();
+                offsetAdjustment = line.indexOf(cl);
+                if (offsetAdjustment === -1) offsetAdjustment = 0;
+
                 sc = `text-3xl my-4 font-serif ${darkMode ? 'text-red-400' : 'text-gray-900'} `;
             } else if (line.startsWith('::')) {
-                cl = line.replace('::', '').trim();
+                let temp = line.replace('::', '');
+                cl = temp.trim();
+                offsetAdjustment = line.indexOf(cl);
+                if (offsetAdjustment === -1) offsetAdjustment = 0;
+
                 sc = `mb-2 text-center block ${darkMode ? 'text-gray-300' : 'text-gray-800'} `;
             }
-            return <div key={idx} className={sc} style={{ fontSize: `${editorFontSize}px` }}>{renderRecursive(cl)}</div>;
+
+            return <div key={idx} className={sc} style={{ fontSize: `${editorFontSize}px` }}>{renderRecursive(cl, currentLineStart + offsetAdjustment)}</div>;
         });
     };
 

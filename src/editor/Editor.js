@@ -201,7 +201,7 @@ const Editor = ({ onSwitchMode, user, darkMode, toggleDarkMode }) => {
     };
 
     const downloadDictionary = async () => {
-        await saveDictionary(dictionary); // DataService handles download/save
+        await saveDictionary(dictionary, true); // Force download on web
         if (window.api?.isElectron) showToast('Sözlük dosyaya kaydedildi.', 'success');
     };
 
@@ -670,7 +670,7 @@ const Editor = ({ onSwitchMode, user, darkMode, toggleDarkMode }) => {
     };
 
     const handleSaveWord = () => {
-        const { word, originalWord, short, long } = popupData;
+        const { word, originalWord, short, long, fullTag, editIndex } = popupData;
 
         // Trim inputs to avoid extra spaces
         const cleanWord = word ? word.trim() : "";
@@ -701,24 +701,36 @@ const Editor = ({ onSwitchMode, user, darkMode, toggleDarkMode }) => {
         let txt = rawText;
 
         // Conditional formatting: Omit second pipe if long description is empty
-        // Conditional formatting: Omit second pipe if long description is empty
         const rep = cleanLong
             ? `[[${cleanWord}|${cleanShort}|${cleanLong}]]`
             : `[[${cleanWord}|${cleanShort}]]`;
 
-        if (popupData.isEdit) {
-            // Trim originalWord to ensure regex matches the token regardless of surrounding spaces
+        if (popupData.isEdit && typeof editIndex === 'number' && fullTag) {
+            // INSTANCE SPECIFIC REPLACEMENT
+            // Verify content at index matches fullTag to be safe
+            const currentContent = txt.substring(editIndex, editIndex + fullTag.length);
+            if (currentContent === fullTag) {
+                txt = txt.substring(0, editIndex) + rep + txt.substring(editIndex + fullTag.length);
+            } else {
+                console.warn("Index mismatch for tag edit, falling back to global replace", { currentContent, fullTag });
+                // Fallback to global replace if index mismatch (e.g. concurrent edits?)
+                const esc = cleanOriginal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`\\[\\[\\s*${esc}\\s*\\|[\\s\\S]*?\\]\\]`, 'g');
+                txt = txt.replace(regex, rep);
+            }
+        } else if (popupData.isEdit) {
+            // Fallback if index missing
             const esc = cleanOriginal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // Flexible regex: matches [[ spaced_word | ... ]] or [[word|...]]
             const regex = new RegExp(`\\[\\[\\s*${esc}\\s*\\|[\\s\\S]*?\\]\\]`, 'g');
             txt = txt.replace(regex, rep);
         } else {
-            // If we have originalWord, prefer replacing that specific phrase to preserve context/integrity
+            // New Tag (or unknown context) - Replace by text
             const targetRepl = cleanOriginal || cleanWord;
             txt = txt.replaceAll(targetRepl, rep);
         }
         setRawText(txt);
-        saveDictionary(newDict);
+        saveDictionary(newDict, false); // Do not force download on web
+        localStorage.setItem('risaleDictionary', JSON.stringify(newDict)); // Persist to local storage
         setPopupData({ ...popupData, show: false });
         window.getSelection().removeAllRanges();
     };
@@ -734,7 +746,8 @@ const Editor = ({ onSwitchMode, user, darkMode, toggleDarkMode }) => {
         const { word } = popupData;
         const newDict = { ...dictionary };
         delete newDict[word];
-        saveDictionary(newDict);
+        saveDictionary(newDict, false);
+        localStorage.setItem('risaleDictionary', JSON.stringify(newDict));
         setPopupData({ ...popupData, show: false });
     };
 
@@ -879,12 +892,31 @@ const Editor = ({ onSwitchMode, user, darkMode, toggleDarkMode }) => {
                     onMouseUp={handleMouseUp}
                     onRawTextChange={setRawText}
                     highlightTerm={highlightTerm}
-                    onWordClick={(rect, orig, short, long) => {
+                    onWordClick={(rect, orig, short, long, fullTag, idx) => {
                         const cleanOrig = orig.trim();
                         setDictSearchTerm(cleanOrig);
                         const entry = dictionary[cleanOrig];
                         const src = entry ? (entry.source || "AI") : "";
+                        // Pass fullTag and idx to popupData for editing specific instance
+                        setPopupData({
+                            show: true,
+                            word: cleanOrig,
+                            originalWord: cleanOrig,
+                            short,
+                            long,
+                            source: src,
+                            x: rect.left, // Placeholder, openPopup calculates better
+                            y: rect.bottom,
+                            placement: 'bottom',
+                            isEdit: true,
+                            fullTag: fullTag,
+                            editIndex: idx
+                        });
+                        // Re-use openPopup logic for positioning if possible, but openPopup takes explicit args
+                        // For simplicity, I'll allow openPopup to be called or just set state here?
+                        // openPopup calculates position. Let's call openPopup and then merge the extra data.
                         openPopup(rect, cleanOrig, short, long, true, src);
+                        setPopupData(prev => ({ ...prev, fullTag, editIndex: idx }));
                     }}
                 />
             </div>

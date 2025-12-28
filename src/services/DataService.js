@@ -91,7 +91,7 @@ export const getDictionary = async () => {
     }
 };
 
-export const saveDictionary = async (dictionaryData) => {
+export const saveDictionary = async (dictionaryData, forceDownload = false) => {
     if (isElectron) {
         try {
             const result = await window.api.saveFile({
@@ -104,14 +104,18 @@ export const saveDictionary = async (dictionaryData) => {
             return false;
         }
     } else {
-        // Web: Trigger download
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dictionaryData, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "sozluk.json");
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+        if (forceDownload) {
+            // Web: Trigger download
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dictionaryData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "sozluk.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            return true;
+        }
+        // If not forcing download, we do nothing here (caller handles localStorage)
         return true;
     }
 };
